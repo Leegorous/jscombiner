@@ -105,11 +105,36 @@ public class JavaScriptCombiner extends JavaScriptDocument {
 		ArrayList tests = this.readTestConfig(this.getContent());
 		if (tests==null) return;
 		
+		StringBuffer sb = new StringBuffer();
+		File testCase;
+		String testCasePath;
 		for (int i=0, j=tests.size(); i<j; i++) {
+			testCase = (File) tests.get(i);
 			JavaScriptTestCaseCombiner jstcc = new JavaScriptTestCaseCombiner(
-					(File) tests.get(i), this.getClassPaths(), jsUnit);
+					testCase, this.getClassPaths(), jsUnit);
 			jstcc.assemble();
+			
+			testCasePath = JavaScriptCombiner.translate2RelatePath(this.getDoc(), testCase);
+			testCasePath = testCasePath.substring(0, testCasePath.lastIndexOf(".js")) + ".html";
+			sb.append("testSuite.addTestPage(translatePath(\"");
+			sb.append(testCasePath);
+			sb.append("\"));");
 		}
+		
+		File testSuiteName = new File(this.getTestSuiteName());
+		String template = StreamReader.read(
+				JavaScriptCombiner.class.getResourceAsStream("/TestSuiteTemplate.xml"));
+		template = template.replaceAll("\\{!\\[testSuiteName]}", this.fileName);
+		template = template.replaceAll("\\{!\\[jsUnitSource]}", 
+				JavaScriptCombiner.translate2RelatePath(this.getDoc(), jsUnit));
+		template = template.replaceAll("\\{!\\[testSuiteScripts]}", sb.toString());
+		saveFile(testSuiteName, template);
+	}
+	
+	private String getTestSuiteName() {
+		String path = this.getDoc().getAbsolutePath();
+		path = path.substring(0, path.lastIndexOf(this.fileName));
+		return path = path + "test" + this.fileName + ".html";
 	}
 	
 	protected File readJsUnitConfig(String content) throws IOException {
@@ -200,16 +225,18 @@ public class JavaScriptCombiner extends JavaScriptDocument {
 	
 	private String getAgentFileName() {
 		if (agentFileName==null) {
-			String filePath = this.getDoc().getAbsolutePath();
-			agentFileName = filePath.substring(0, filePath.lastIndexOf(".cfg.js"))+".html";
+			//String filePath = this.getDoc().getAbsolutePath();
+			agentFileName = this.filePath + this.fileName+".html";
+			//agentFileName = filePath.substring(0, filePath.lastIndexOf(".cfg.js"))+".html";
 		}
 		return agentFileName;
 	}
 	
 	private String getScriptFileName() {
 		if (scriptFileName==null) {
-			String filePath = this.getDoc().getAbsolutePath();
-			scriptFileName = filePath.substring(0, filePath.lastIndexOf(".cfg.js"))+".js";
+			//String filePath = this.getDoc().getAbsolutePath();
+			//scriptFileName = filePath.substring(0, filePath.lastIndexOf(".cfg.js"))+".js";
+			scriptFileName = this.filePath + this.fileName+".js";
 		}
 		return scriptFileName;
 	}
@@ -316,6 +343,10 @@ public class JavaScriptCombiner extends JavaScriptDocument {
 
 	protected boolean isAgentMode() {
 		return agentMode;
+	}
+	
+	protected void setFileName() {
+		this.fileName = this.getDoc().getName().substring(0, this.getDoc().getName().lastIndexOf(".cfg.js"));
 	}
 
 }

@@ -39,7 +39,8 @@ public class JavaScriptTestCaseCombiner extends JavaScriptDocument {
 		
 		String template = getTemplate();
 		
-		File testCaseFile = new File(this.getDoc().getAbsolutePath().replaceAll("\\.js", ".html"));
+		//File testCaseFile = new File(this.getDoc().getAbsolutePath().replaceAll("\\.js", ".html"));
+		File testCaseFile = new File(this.filePath + this.fileName + ".html");
 		String testCaseName = this.getDoc().getName().replaceAll("\\.js", "");
 		
 		template = template.replaceAll("\\{!\\[testCaseName]}", testCaseName);
