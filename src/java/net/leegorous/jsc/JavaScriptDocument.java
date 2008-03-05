@@ -33,6 +33,9 @@ public class JavaScriptDocument {
 	
 	private ArrayList classPaths;
 	
+	protected String fileName;
+	protected String filePath;
+	
 	private String content;
 	
 	public JavaScriptDocument() {}
@@ -46,6 +49,9 @@ public class JavaScriptDocument {
 	protected void load() throws Exception {
 		if (this.doc==null) throw new JavaScriptNotFoundException();
 		content = readFile(this.doc);
+		
+		this.setFileName();
+		this.setFilePath();
 	}
 	
 	protected void findImports() throws Exception {
@@ -199,5 +205,14 @@ public class JavaScriptDocument {
 
 	protected String getContent() {
 		return content;
+	}
+
+	protected void setFileName() {
+		this.fileName = this.doc.getName().substring(0, this.doc.getName().lastIndexOf(".js"));
+	}
+	
+	protected void setFilePath() {
+		this.filePath = this.doc.getAbsolutePath().substring(0, 
+				this.doc.getAbsolutePath().lastIndexOf(this.fileName));
 	}
 }
