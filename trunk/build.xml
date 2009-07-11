@@ -14,7 +14,7 @@
 	
 	<path id="project.class.path">
 		<pathelement path="${java.class.path}/"/>
-		<pathelement location="${lib}/chardet.jar"/>
+		<pathelement location="${lib}/chardet-1.0.jar"/>
 		<pathelement path="${tomcat-lib}/jsp-api.jar" />
 		<pathelement path="${tomcat-lib}/servlet-api.jar" />
 	</path>
