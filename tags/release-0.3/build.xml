@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="jscombiner" default="dist" basedir=".">
+	<description>
+		JavaScript Combiner from leegorous.net
+	</description>
+	<!-- set the tomcat path -->
+	<property name="tomcat-home" location="D:\Apache\jakarta-tomcat-5.0.28" />
+	<property name="tomcat-lib" location="${tomcat-home}/common/lib/" />
+	<!-- set global properties for this build -->
+	<property name="src" location="src"/>
+	<property name="lib" location="lib" />
+	<property name="build" location="build"/>
+	<property name="dist"  location="dist"/>
+	
+	<path id="project.class.path">
+		<pathelement path="${java.class.path}/"/>
+		<pathelement location="${lib}/chardet.jar"/>
+		<pathelement path="${tomcat-lib}/jsp-api.jar" />
+		<pathelement path="${tomcat-lib}/servlet-api.jar" />
+	</path>
+		
+	<target name="init">
+		<!-- Create the time stamp -->
+		<tstamp />
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="${build}"/>
+	</target>
+	
+	<target name="compile" depends="init" description="Compile the source">
+		<!-- Compile the java code from ${src} into ${build} -->
+		<javac srcdir="${src}/java" destdir="${build}">
+			<classpath refid="project.class.path" />
+		</javac>
+		<copy todir="${build}">
+			<fileset dir="${src}/resources" />
+		</copy>
+		<!-- javac srcdir="${src}/resources" destdir="${build}" /-->
+	</target>
+	
+	<target name="dist" depends="compile" description="Generate the distribution">
+		<!-- Create the distribution directory -->
+		<mkdir dir="${dist}" />
+		<mkdir dir="${dist}/lib"/>
+		
+		<copyfile dest="${dist}/lib/chardet.jar" src="${lib}/chardet.jar"/>
+		<!-- Put everything in ${build} into the chardet.jar file -->
+		<jar jarfile="${dist}/lib/jscombiner.jar" basedir="${build}" />
+	</target>
+	
+	<target name="clean" description="Clean up">
+		<!-- Delete the ${build} and ${dist} directory trees -->
+		<delete dir="${build}" />
+		<delete dir="${dist}" />
+	</target>
+</project> 
