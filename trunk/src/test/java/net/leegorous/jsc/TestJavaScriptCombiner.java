@@ -112,6 +112,6 @@ public class TestJavaScriptCombiner extends JavaScriptFileTestSupport {
 		JavaScriptCombiner jsc = new JavaScriptCombiner();
 		jsc.setDoc(configPath);
 		File file = jsc.getDoc();
-		TestCase.assertEquals(configPath, file.getAbsolutePath());
+		TestCase.assertEquals(new File(configPath), file);
 	}
 }
