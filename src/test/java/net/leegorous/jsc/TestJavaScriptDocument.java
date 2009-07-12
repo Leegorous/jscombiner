@@ -16,41 +16,52 @@
 package net.leegorous.jsc;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 
 import junit.framework.TestCase;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class TestJavaScriptDocument extends TestCase {
-	
-	private String classPath = "E:\\projects\\lab\\trunk\\jsunit\\";
-	private String testScriptPath = "E:\\projects\\lab\\trunk\\jsunit\\tests\\";
-	
-	private String testFile1 = "testAssert.js";
-	private String testFile2 = "testAssert2.js";
-	private String testFile3 = "testAssert3.js";
-	
-	public void testFindImport() throws Exception {
-		File file = new File(testScriptPath+testFile3);
-		ArrayList classPaths = new ArrayList();
-		classPaths.add(new File(classPath));
-		JavaScriptDocument jsdoc = new JavaScriptDocument(null, file, classPaths);
-		jsdoc.findImports();
-		
-		assertNotNull(jsdoc.getImportedDocs());
-		assertEquals("testAssert3.js only imported 1 file.",1, jsdoc.getImportedDocs().size());
-		assertEquals("It should be 3 documents imported in total.",3, jsdoc.getImportedFiles().size());
-		
-		String content = jsdoc.getImportedContent().toString();
-		assertTrue("C.js should be imported.",content.indexOf("C = 1;")>0);
-		assertTrue("D.js should be imported.",content.indexOf("D = 2;")>0);
+
+	protected Log log = LogFactory.getLog(this.getClass());
+
+	private String getFileName(String name) throws URISyntaxException {
+		URL url = this.getClass().getResource(name);
+		URI uri = new URI(url.toString());
+		return uri.getPath();
 	}
-	
-	public void testFindImportException() {
-		File file = new File(testScriptPath + testFile2);
+
+	public void testFindImport() throws Exception {
+		File file = new File(getFileName("/scripts/test/pkg/b.js"));
 		ArrayList classPaths = new ArrayList();
-		classPaths.add(new File(classPath));
+		classPaths.add(new File(getFileName("/scripts")));
+		JavaScriptDocument jsdoc = new JavaScriptDocument(null, file,
+				classPaths);
+		jsdoc.findImports();
+
+		assertNotNull(jsdoc.getImportedDocs());
+		assertEquals("b.js only imported 2 file.", 2, jsdoc.getImportedDocs()
+				.size());
+		assertEquals("It should be 3 documents imported in total.", 3, jsdoc
+				.getImportedFiles().size());
+
+		String content = jsdoc.getImportedContent().toString();
+		assertTrue("a.js should be imported.", content.indexOf("var A;") > 0);
+		assertTrue("c.js should be imported.", content.indexOf("var C;") > 0);
+	}
+
+	public void testFindImportException() throws Exception {
+		File file = new File(getFileName("/scripts/test/pkg/n1.js"));
+		ArrayList classPaths = new ArrayList();
+		classPaths.add(new File(getFileName("/scripts/test")));
 		try {
-			JavaScriptDocument jsdoc = new JavaScriptDocument(null, file, classPaths);
+			JavaScriptDocument jsdoc = new JavaScriptDocument(null, file,
+					classPaths);
 			jsdoc.findImports();
 			fail("Cycle import exception excepted.");
 		} catch (LoopedImportException e) {
@@ -59,31 +70,47 @@ public class TestJavaScriptDocument extends TestCase {
 			fail("Exception unexcepted.");
 		}
 	}
-	
+
+	public void testGetClassName() throws Exception {
+		File file = new File(getFileName("/scripts/test/pkg/b.js"));
+		String content = JavaScriptDocument.readFile(file);
+		String name = JavaScriptDocument.getClassName(content);
+		assertEquals("pkg.b", name);
+	}
+
 	public void testGetImportConfig() throws Exception {
-		String config0 = "util.ObjectLocker";
-		File file = new File(testScriptPath+testFile1);
+		File file = new File(getFileName("/scripts/test/pkg/b.js"));
 		String content = JavaScriptDocument.readFile(file);
 		JavaScriptDocument jsdoc = new JavaScriptDocument();
 		ArrayList config = jsdoc.getImportConfig(content);
-		
-		assertEquals(config0, config.get(0).toString());
-		assertEquals(false, config.contains("importStateWithoutSemicolon"));
+
+		assertEquals("a", config.get(0).toString());
+		assertEquals("c", config.get(1).toString());
+		assertEquals(2, config.size());
 	}
-	
+
 	public void testReadFile() throws Exception {
-		File file = new File(testScriptPath+testFile1);
+		File file = new File(getFileName("/scripts/a.js"));
 		JavaScriptDocument.readFile(file);
+		log.debug(file.getAbsoluteFile() + (file.exists() ? "" : "does not")
+				+ " exist");
 	}
-	
-	public void testReadFileException() {
-		File file = new File(testScriptPath+testFile1+"s");
+
+	public void testReadFileException() throws URISyntaxException {
+		File file = new File(getFileName("/scripts/a.js") + "s");
 		try {
 			JavaScriptDocument.readFile(file);
 			fail("Exception expected.");
 		} catch (Exception e) {
+			log.debug(e.getMessage());
 			assertNotNull(e.getMessage());
 		}
+	}
+
+	public void testResolveClasspath() throws Exception {
+		File file = new File(getFileName("/scripts/test/pkg/b.js"));
+		File path = JavaScriptDocument.resolveClasspath(file);
+		assertEquals(getFileName("/scripts/test"), path.getAbsolutePath());
 	}
 
 }
