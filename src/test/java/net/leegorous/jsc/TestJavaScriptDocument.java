@@ -16,29 +16,21 @@
 package net.leegorous.jsc;
 
 import java.io.File;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
-
-import junit.framework.TestCase;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class TestJavaScriptDocument extends TestCase {
+public class TestJavaScriptDocument extends JavaScriptFileTestSupport {
 
 	protected Log log = LogFactory.getLog(this.getClass());
 
-	private String getFileName(String name) throws URISyntaxException {
-		URL url = this.getClass().getResource(name);
-		URI uri = new URI(url.toString());
-		return uri.getPath();
-	}
-
 	public void testFindImport() throws Exception {
 		File file = new File(getFileName("/scripts/test/pkg/b.js"));
-		ArrayList classPaths = new ArrayList();
+		Set classPaths = new TreeSet();
 		classPaths.add(new File(getFileName("/scripts")));
 		JavaScriptDocument jsdoc = new JavaScriptDocument(null, file,
 				classPaths);
@@ -57,11 +49,11 @@ public class TestJavaScriptDocument extends TestCase {
 
 	public void testFindImportException() throws Exception {
 		File file = new File(getFileName("/scripts/test/pkg/n1.js"));
-		ArrayList classPaths = new ArrayList();
-		classPaths.add(new File(getFileName("/scripts/test")));
+		Set classpath = new TreeSet();
+		classpath.add(new File(getFileName("/scripts/test")));
 		try {
 			JavaScriptDocument jsdoc = new JavaScriptDocument(null, file,
-					classPaths);
+					classpath);
 			jsdoc.findImports();
 			fail("Cycle import exception excepted.");
 		} catch (LoopedImportException e) {
@@ -85,7 +77,7 @@ public class TestJavaScriptDocument extends TestCase {
 		ArrayList config = jsdoc.getImportConfig(content);
 
 		assertEquals("a", config.get(0).toString());
-		assertEquals("c", config.get(1).toString());
+		assertEquals("pkg.c", config.get(1).toString());
 		assertEquals(2, config.size());
 	}
 
