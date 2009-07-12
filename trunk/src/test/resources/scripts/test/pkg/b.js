@@ -1,6 +1,6 @@
 /**
  * @import	a  ;  
- * @import    c
+ * @import    pkg.c
  * 
  * @class pkg.b
  */
