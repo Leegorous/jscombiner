@@ -1,5 +1,0 @@
-/**
- * @agent true
- * 
- * @classpath test ; 
- */

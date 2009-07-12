@@ -7,14 +7,14 @@
 	<property name="tomcat-home" location="D:\Apache\jakarta-tomcat-5.0.28" />
 	<property name="tomcat-lib" location="${tomcat-home}/common/lib/" />
 	<!-- set global properties for this build -->
-	<property name="src" location="src/main"/>
+	<property name="src" location="src"/>
 	<property name="lib" location="lib" />
 	<property name="build" location="build"/>
 	<property name="dist"  location="dist"/>
 	
 	<path id="project.class.path">
 		<pathelement path="${java.class.path}/"/>
-		<pathelement location="${lib}/chardet-1.0.jar"/>
+		<pathelement location="${lib}/chardet.jar"/>
 		<pathelement path="${tomcat-lib}/jsp-api.jar" />
 		<pathelement path="${tomcat-lib}/servlet-api.jar" />
 	</path>
