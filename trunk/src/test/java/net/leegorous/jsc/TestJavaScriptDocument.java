@@ -102,7 +102,7 @@ public class TestJavaScriptDocument extends JavaScriptFileTestSupport {
 	public void testResolveClasspath() throws Exception {
 		File file = new File(getFileName("/scripts/test/pkg/b.js"));
 		File path = JavaScriptDocument.resolveClasspath(file);
-		assertEquals(getFileName("/scripts/test"), path.getAbsolutePath());
+		assertEquals(new File(getFileName("/scripts/test")), path);
 	}
 
 }
