@@ -94,6 +94,7 @@ public class JsContextManager {
 		js.setPath(file.getAbsolutePath());
 		js.setLastModified(file.lastModified());
 		js.setLength(file.length());
+		js.setImported(JavaScriptDocument.getImportInfo(content));
 	}
 
 }
