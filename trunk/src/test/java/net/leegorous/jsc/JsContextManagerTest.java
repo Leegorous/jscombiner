@@ -35,9 +35,16 @@ public class JsContextManagerTest extends JavaScriptFileTestSupport {
 	}
 
 	public void testGetJs() throws Exception {
-		JsFile file = mgr.getJs(getFileName("/scripts/test/pkg/b.js"));
-		assertNotNull(file);
-		log.debug(file);
+		JsFile js = mgr.getJs(getFileName("/scripts/test/pkg/b.js"));
+		assertNotNull(js);
+		log.debug(js);
+	}
+
+	public void testGetJsClass() throws Exception {
+		File file = new File(getFileName("/scripts/test"));
+		mgr.configClasspath(file);
+		JsFile js = mgr.getJsClass("a");
+		assertNotNull(js);
 	}
 
 	public void testRefreshJsFile() throws Exception {
