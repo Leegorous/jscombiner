@@ -48,6 +48,9 @@ public class JsContextManagerTest extends JavaScriptFileTestSupport {
 		assertEquals("pkg.b", js.getName());
 		// To make sure the classpaths have been added
 		assertEquals(2, mgr.getClasspath().size());
+
+		// To make sure it got the import info
+		assertEquals(2, js.getImported().size());
 	}
 
 }

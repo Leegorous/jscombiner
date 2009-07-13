@@ -4,6 +4,7 @@
 package net.leegorous.jsc;
 
 import java.util.Date;
+import java.util.Set;
 
 /**
  * @author leegorous
@@ -25,6 +26,15 @@ public class JsFile {
 
 	private long length;
 
+	private Set imported;
+
+	/**
+	 * @return the imported
+	 */
+	public Set getImported() {
+		return imported;
+	}
+
 	public long getLastModified() {
 		return lastModified;
 	}
@@ -42,6 +52,14 @@ public class JsFile {
 
 	public String getPath() {
 		return path;
+	}
+
+	/**
+	 * @param imported
+	 *            the imported to set
+	 */
+	public void setImported(Set imported) {
+		this.imported = imported;
 	}
 
 	public void setLastModified(long lastModified) {
