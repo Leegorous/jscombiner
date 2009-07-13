@@ -105,4 +105,10 @@ public class TestJavaScriptDocument extends JavaScriptFileTestSupport {
 		assertEquals(new File(getFileName("/scripts/test")), path);
 	}
 
+	public void testConfigClasspath() throws Exception {
+		File file = new File(getFileName("/scripts/test/config.js"));
+		Set cp = JavaScriptDocument.configClasspath(file);
+		assertTrue(cp.contains(new File(getFileName("/scripts"))));
+	}
+
 }

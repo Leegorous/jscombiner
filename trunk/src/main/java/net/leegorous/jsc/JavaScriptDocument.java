@@ -16,8 +16,10 @@
 package net.leegorous.jsc;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
@@ -25,13 +27,84 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class JavaScriptDocument {
 
-	protected Log log = LogFactory.getLog(this.getClass());
+	public static Set configClasspath(File file) throws Exception {
+		String content = readFile(file);
+		return configClasspath(file, content);
+	}
 
+	private static Set configClasspath(File file, String content)
+			throws FileNotFoundException {
+		if (!file.isDirectory()) {
+			file = file.getParentFile();
+		}
+		Matcher m = CLASSPATH_PATTERN.matcher(content);
+		Set cp = null;
+		if (m.find()) {
+			cp = new HashSet();
+			do {
+				String str = m.group(1);
+				String path = FilenameUtils.concat(file.getAbsolutePath(), str);
+				File p = new File(path);
+				if (p.exists() && p.isDirectory()) {
+					cp.add(p);
+				} else {
+					throw new FileNotFoundException(path + " from "
+							+ file.getAbsolutePath() + " + " + str);
+				}
+			} while (m.find());
+		}
+		return cp;
+	}
+
+	public static String getClassName(String content) {
+		Matcher m = CLASS_PATTERN.matcher(content);
+		if (m.find()) {
+			return m.group(1);
+		}
+		return null;
+	}
+
+	protected static String readFile(File file) throws Exception {
+		if (file == null)
+			throw new JavaScriptNotFoundException();
+		String charset = JavaScriptCombiner.getCharset(file);
+		return FileUtils.readFileToString(file, charset);
+	}
+
+	public static File resolveClasspath(File file) throws Exception {
+		String content = readFile(file);
+		return resolveClasspath(file, content);
+	}
+
+	// private ArrayList classPaths;
+
+	public static File resolveClasspath(File file, String content)
+			throws Exception {
+		String className = getClassName(content);
+		File classpath = file.getParentFile();
+		if (className != null) {
+			String[] ss = className.split("\\.");
+			if (ss.length > 1) {
+				for (int i = ss.length - 2; i >= 0; i--) {
+					String pkg = ss[i];
+					if (pkg.equals(classpath.getName())) {
+						classpath = classpath.getParentFile();
+					} else {
+						throw new RuntimeException("class definition error");
+					}
+				}
+			}
+		}
+		return classpath;
+	}
+
+	protected Log log = LogFactory.getLog(this.getClass());
 	private JavaScriptDocument linker;
 
 	private File doc;
@@ -40,11 +113,10 @@ public class JavaScriptDocument {
 
 	private ArrayList importedDocs = new ArrayList();
 
-	// private ArrayList classPaths;
-
 	private Set classpath;
 
 	protected String fileName;
+
 	protected String filePath;
 
 	private String content;
@@ -58,6 +130,10 @@ public class JavaScriptDocument {
 	protected static Pattern CLASS_PATTERN = Pattern
 			.compile("@class\\s*(\\w+(\\.\\w+)*)" + PATTERN_SUFFIX);
 
+	protected static Pattern CLASSPATH_PATTERN = Pattern
+			.compile("@classpath\\s*(\\.|[\\w\\.]+|([\\w\\.]+/)+)"
+					+ PATTERN_SUFFIX);
+
 	public JavaScriptDocument() {
 	}
 
@@ -66,15 +142,6 @@ public class JavaScriptDocument {
 		this.setLinker(linker);
 		this.setDoc(file);
 		this.classpath = classpath;
-	}
-
-	protected void load() throws Exception {
-		if (this.doc == null)
-			throw new JavaScriptNotFoundException();
-		content = readFile(this.doc);
-
-		this.setFileName();
-		this.setFilePath();
 	}
 
 	protected void findImports() throws Exception {
@@ -99,62 +166,6 @@ public class JavaScriptDocument {
 		// classPaths.add(this.doc.getParentFile());
 
 		processImports(config);
-	}
-
-	protected ArrayList getImportedFiles() {
-		ArrayList list = new ArrayList();
-		for (int i = 0, j = importedDocs.size(); i < j; i++) {
-			list.addAll(((JavaScriptDocument) importedDocs.get(i))
-					.getImportedFiles());
-		}
-		list.add(doc);
-		return list;
-	}
-
-	protected StringBuffer getImportedContent() {
-		StringBuffer sb = new StringBuffer();
-		for (int i = 0, j = importedDocs.size(); i < j; i++) {
-			sb.append(((JavaScriptDocument) importedDocs.get(i))
-					.getImportedContent());
-		}
-		sb.append(content);
-		return sb;
-	}
-
-	protected boolean isImportable(File file) throws LoopedImportException {
-		if (this.doc.equals(file)) {
-			log.error("File " + this.doc.getName() + " import itself");
-			throw new LoopedImportException();
-		}
-		if (importedFiles.contains(file))
-			return false;
-		else {
-			importedFiles.add(file);
-			boolean importable = true;
-			if (linker != null)
-				importable = linker.isImportable(file);
-			return importable;
-		}
-	}
-
-	protected void processImports(ArrayList config) throws Exception {
-		if (config == null)
-			return;
-		for (int i = 0; i < config.size(); i++) {
-			String item = config.get(i).toString();
-
-			ArrayList classes = this.getClasses(item.replaceAll("\\.", "/")
-					+ ".js");
-			for (int j = 0; j < classes.size(); j++) {
-				File file = (File) classes.get(j);
-				if (isImportable(file)) {
-					JavaScriptDocument jsDoc = new JavaScriptDocument(this,
-							file, classpath);
-					importedDocs.add(jsDoc);
-					jsDoc.findImports();
-				}
-			}
-		}
 	}
 
 	public ArrayList getClasses(String path) throws IOException {
@@ -204,6 +215,18 @@ public class JavaScriptDocument {
 		return result;
 	}
 
+	protected Set getClasspath() {
+		return classpath;
+	}
+
+	protected String getContent() {
+		return content;
+	}
+
+	protected File getDoc() {
+		return doc;
+	}
+
 	protected ArrayList getImportConfig(String content) {
 		Matcher m = IMPORT_PATTERN.matcher(content);
 		ArrayList config = null;
@@ -224,23 +247,81 @@ public class JavaScriptDocument {
 		return config;
 	}
 
-	protected static String readFile(File file) throws Exception {
-		if (file == null)
-			throw new JavaScriptNotFoundException();
-		String charset = JavaScriptCombiner.getCharset(file);
-		return FileUtils.readFileToString(file, charset);
+	protected StringBuffer getImportedContent() {
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0, j = importedDocs.size(); i < j; i++) {
+			sb.append(((JavaScriptDocument) importedDocs.get(i))
+					.getImportedContent());
+		}
+		sb.append(content);
+		return sb;
+	}
+
+	protected ArrayList getImportedDocs() {
+		return importedDocs;
+	}
+
+	protected ArrayList getImportedFiles() {
+		ArrayList list = new ArrayList();
+		for (int i = 0, j = importedDocs.size(); i < j; i++) {
+			list.addAll(((JavaScriptDocument) importedDocs.get(i))
+					.getImportedFiles());
+		}
+		list.add(doc);
+		return list;
 	}
 
 	protected JavaScriptDocument getLinker() {
 		return linker;
 	}
 
-	protected void setLinker(JavaScriptDocument linker) {
-		this.linker = linker;
+	protected boolean isImportable(File file) throws LoopedImportException {
+		if (this.doc.equals(file)) {
+			log.error("File " + this.doc.getName() + " import itself");
+			throw new LoopedImportException();
+		}
+		if (importedFiles.contains(file))
+			return false;
+		else {
+			importedFiles.add(file);
+			boolean importable = true;
+			if (linker != null)
+				importable = linker.isImportable(file);
+			return importable;
+		}
 	}
 
-	protected File getDoc() {
-		return doc;
+	protected void load() throws Exception {
+		if (this.doc == null)
+			throw new JavaScriptNotFoundException();
+		content = readFile(this.doc);
+
+		this.setFileName();
+		this.setFilePath();
+	}
+
+	protected void processImports(ArrayList config) throws Exception {
+		if (config == null)
+			return;
+		for (int i = 0; i < config.size(); i++) {
+			String item = config.get(i).toString();
+
+			ArrayList classes = this.getClasses(item.replaceAll("\\.", "/")
+					+ ".js");
+			for (int j = 0; j < classes.size(); j++) {
+				File file = (File) classes.get(j);
+				if (isImportable(file)) {
+					JavaScriptDocument jsDoc = new JavaScriptDocument(this,
+							file, classpath);
+					importedDocs.add(jsDoc);
+					jsDoc.findImports();
+				}
+			}
+		}
+	}
+
+	protected void setClasspath(Set classpath) {
+		this.classpath = classpath;
 	}
 
 	protected void setDoc(File doc) throws JavaScriptNotFoundException {
@@ -249,20 +330,9 @@ public class JavaScriptDocument {
 		this.doc = new File(doc.getAbsolutePath());
 	}
 
-	protected Set getClasspath() {
-		return classpath;
-	}
-
-	protected void setClasspath(Set classpath) {
-		this.classpath = classpath;
-	}
-
-	protected ArrayList getImportedDocs() {
-		return importedDocs;
-	}
-
-	protected String getContent() {
-		return content;
+	protected void setDoc(String filePath) throws IllegalPathException,
+			JavaScriptNotFoundException {
+		this.setDoc(new File(filePath));
 	}
 
 	protected void setFileName() {
@@ -275,36 +345,7 @@ public class JavaScriptDocument {
 				this.doc.getAbsolutePath().lastIndexOf(this.fileName));
 	}
 
-	public static String getClassName(String content) {
-		Matcher m = CLASS_PATTERN.matcher(content);
-		if (m.find()) {
-			return m.group(1);
-		}
-		return null;
-	}
-
-	public static File resolveClasspath(File file) throws Exception {
-		String content = readFile(file);
-		return resolveClasspath(file, content);
-	}
-
-	public static File resolveClasspath(File file, String content)
-			throws Exception {
-		String className = getClassName(content);
-		File classpath = file.getParentFile();
-		if (className != null) {
-			String[] ss = className.split("\\.");
-			if (ss.length > 1) {
-				for (int i = ss.length - 2; i >= 0; i--) {
-					String pkg = ss[i];
-					if (pkg.equals(classpath.getName())) {
-						classpath = classpath.getParentFile();
-					} else {
-						throw new RuntimeException("class definition error");
-					}
-				}
-			}
-		}
-		return classpath;
+	protected void setLinker(JavaScriptDocument linker) {
+		this.linker = linker;
 	}
 }

@@ -45,10 +45,6 @@ public class JavaScriptCombiner extends JavaScriptDocument {
 			.compile("@test\\s*((\\.|([\\w\\.]+/)+)*((\\w+\\.)+js)?)"
 					+ PATTERN_SUFFIX);
 
-	protected static Pattern CLASSPATH_PATTERN = Pattern
-			.compile("@classpath\\s*(\\.|[\\w\\.]+|([\\w\\.]+/)+)"
-					+ PATTERN_SUFFIX);
-
 	public JavaScriptCombiner() {
 	}
 
@@ -312,15 +308,6 @@ public class JavaScriptCombiner extends JavaScriptDocument {
 				charset = "UTF-8";
 		// System.out.println("CharSet is: "+charset);
 		return charset;
-	}
-
-	protected void setDoc(String filePath) throws IllegalPathException,
-			JavaScriptNotFoundException {
-		File file = new File(filePath);
-		if (!file.exists()) {
-			throw new IllegalPathException(filePath);
-		}
-		this.setDoc(file);
 	}
 
 	public File[] getRelatedFile(String path) throws IOException {
