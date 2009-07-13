@@ -33,6 +33,21 @@ import org.apache.commons.logging.LogFactory;
 
 public class JavaScriptDocument {
 
+	protected Log log = LogFactory.getLog(this.getClass());
+
+	protected static String PATTERN_SUFFIX = "\\s*(;\\s*(\\r?\\n)?|\\r?\\n)";
+
+	protected static Pattern IMPORT_PATTERN = Pattern
+			.compile("@import\\s*(\\*|\\w+(\\.\\w+)*(\\.\\*)?)"
+					+ PATTERN_SUFFIX);
+
+	protected static Pattern CLASS_PATTERN = Pattern
+			.compile("@class\\s*(\\w+(\\.\\w+)*)" + PATTERN_SUFFIX);
+
+	protected static Pattern CLASSPATH_PATTERN = Pattern
+			.compile("@classpath\\s*(\\.|[\\w\\.]+|([\\w\\.]+/)+)"
+					+ PATTERN_SUFFIX);
+
 	public static Set configClasspath(File file) throws Exception {
 		String content = readFile(file);
 		return configClasspath(file, content);
@@ -82,8 +97,6 @@ public class JavaScriptDocument {
 		return resolveClasspath(file, content);
 	}
 
-	// private ArrayList classPaths;
-
 	public static File resolveClasspath(File file, String content)
 			throws Exception {
 		String className = getClassName(content);
@@ -104,7 +117,21 @@ public class JavaScriptDocument {
 		return classpath;
 	}
 
-	protected Log log = LogFactory.getLog(this.getClass());
+	public static Set getImportInfo(String content) {
+		Set config = null;
+		Matcher m = IMPORT_PATTERN.matcher(content);
+
+		if (m.find()) {
+			config = new HashSet();
+			do {
+				if (m.groupCount() > 1) {
+					config.add(m.group(1));
+				}
+			} while (m.find());
+		}
+		return config;
+	}
+
 	private JavaScriptDocument linker;
 
 	private File doc;
@@ -120,19 +147,6 @@ public class JavaScriptDocument {
 	protected String filePath;
 
 	private String content;
-
-	protected static String PATTERN_SUFFIX = "\\s*(;\\s*(\\r?\\n)?|\\r?\\n)";
-
-	protected static Pattern IMPORT_PATTERN = Pattern
-			.compile("@import\\s*(\\*|\\w+(\\.\\w+)*(\\.\\*)?)"
-					+ PATTERN_SUFFIX);
-
-	protected static Pattern CLASS_PATTERN = Pattern
-			.compile("@class\\s*(\\w+(\\.\\w+)*)" + PATTERN_SUFFIX);
-
-	protected static Pattern CLASSPATH_PATTERN = Pattern
-			.compile("@classpath\\s*(\\.|[\\w\\.]+|([\\w\\.]+/)+)"
-					+ PATTERN_SUFFIX);
 
 	public JavaScriptDocument() {
 	}
@@ -228,21 +242,15 @@ public class JavaScriptDocument {
 	}
 
 	protected ArrayList getImportConfig(String content) {
-		Matcher m = IMPORT_PATTERN.matcher(content);
 		ArrayList config = null;
-
-		if (m.find()) {
-			config = new ArrayList();
-			do {
-				if (m.groupCount() > 1) {
-					config.add(m.group(1));
-					if (log.isDebugEnabled()) {
-						String name = doc != null ? doc.getName()
-								: "Unknown script";
-						log.debug(name + " found import " + m.group(1));
-					}
-				}
-			} while (m.find());
+		Set info = getImportInfo(content);
+		if (info != null) {
+			config = new ArrayList(info);
+			if (log.isDebugEnabled()) {
+				String name = this.doc != null ? doc.getName()
+						: "Unknow script ";
+				log.debug(name + " found imports " + config);
+			}
 		}
 		return config;
 	}
