@@ -6,7 +6,12 @@ import java.net.URL;
 
 import junit.framework.TestCase;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public abstract class JavaScriptFileTestSupport extends TestCase {
+
+	protected Log log = LogFactory.getLog(this.getClass());
 
 	public JavaScriptFileTestSupport() {
 		super();
