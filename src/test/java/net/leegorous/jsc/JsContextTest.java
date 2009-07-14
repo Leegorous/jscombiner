@@ -3,9 +3,6 @@
  */
 package net.leegorous.jsc;
 
-import java.io.File;
-import java.util.Calendar;
-
 /**
  * @author leegorous
  * 
@@ -26,12 +23,19 @@ public class JsContextTest extends JavaScriptFileTestSupport {
 
 	public void testLoad() throws Exception {
 		String name = getFileName("/scripts/test/pkg/b.js");
-		File file = new File(name);
-		Calendar d = Calendar.getInstance();
-		d.setTimeInMillis(file.lastModified());
-		System.out.println(d.getTime());
-		JsFile f = ctx.load(name);
+		ctx.load(name);
+		assertEquals(3, ctx.getList().size());
+		log.debug(ctx.getList());
+	}
 
+	public void testLoadLoopImported() throws Exception {
+		String name = getFileName("/scripts/test/pkg/n1.js");
+		try {
+			ctx.load(name);
+			fail("LoopedImportException expected");
+		} catch (Exception e) {
+			assertTrue(e instanceof LoopedImportException);
+		}
 	}
 
 }
