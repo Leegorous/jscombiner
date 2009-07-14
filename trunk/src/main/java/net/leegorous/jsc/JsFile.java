@@ -85,7 +85,14 @@ public class JsFile {
 	public String toString() {
 		Date date = new Date();
 		date.setTime(lastModified);
-		return "{name:" + name + "; path:" + path + "; modified:" + date
-				+ "; len:" + length + "}";
+		StringBuffer buf = new StringBuffer();
+		buf.append("{\n");
+		buf.append("name:" + name + "\n");
+		buf.append("path:" + path + "\n");
+		buf.append("imported:" + imported + "\n");
+		buf.append("modified:" + date + "\n");
+		buf.append("length:" + length + "\n");
+		buf.append('}');
+		return buf.toString();
 	}
 }

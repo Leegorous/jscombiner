@@ -4,6 +4,7 @@
 package net.leegorous.jsc;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * @author leegorous
@@ -45,6 +46,14 @@ public class JsContextManagerTest extends JavaScriptFileTestSupport {
 		mgr.configClasspath(file);
 		JsFile js = mgr.getJsClass("a");
 		assertNotNull(js);
+	}
+
+	public void testGetJsClasses() throws Exception {
+		File file = new File(getFileName("/scripts/test"));
+		mgr.configClasspath(file);
+		List list = mgr.getJsClasses("*");
+		assertTrue(list.size() > 1);
+		log.debug(list);
 	}
 
 	public void testRefreshJsFile() throws Exception {

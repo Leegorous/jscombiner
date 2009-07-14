@@ -6,20 +6,42 @@ package net.leegorous.jsc;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @author leegorous
  * 
  */
 public class JsContextManager {
+
+	protected Log log = LogFactory.getLog(this.getClass());
+
+	private class Classname {
+		String pkg = "";
+		String pkgPath = "";
+		String clazz;
+
+		Classname(String name) {
+			clazz = name;
+			if (name.indexOf('.') > 0) {
+				int idx = name.lastIndexOf('.');
+				pkg = name.substring(0, idx);
+				pkgPath = pkg.replaceAll("\\.", "/");
+				clazz = name.substring(idx + 1);
+			}
+		}
+	}
 
 	private Set classpath = Collections.synchronizedSet(new HashSet());
 
@@ -60,6 +82,7 @@ public class JsContextManager {
 				}
 			}
 			classpath.add(path);
+			log.info("found classpath: " + path.getAbsolutePath());
 		}
 	}
 
@@ -68,11 +91,28 @@ public class JsContextManager {
 	}
 
 	private JsFile createJs(File file) throws Exception {
+		return createJs(file, null);
+	}
+
+	/**
+	 * Create the {@link JsFile} from file and cache it. The key could be the
+	 * full file path, value of '@class' or the given classname
+	 * 
+	 * @param file
+	 * @param classname
+	 * @return
+	 * @throws Exception
+	 */
+	private JsFile createJs(File file, String classname) throws Exception {
 		JsFile js = new JsFile();
 		refresh(js, file);
 
 		files.put(file.getAbsoluteFile(), js);
-		if (js.getName() != null) {
+		if (js.getName() == null) {
+			if (classname != null) {
+				files.put(classname, js);
+			}
+		} else {
 			files.put(js.getName(), js);
 		}
 		return js;
@@ -105,22 +145,18 @@ public class JsContextManager {
 		JsFile js = (JsFile) files.get(classname);
 
 		if (js == null) {
+			Classname cn = new Classname(classname);
+			final String filename = cn.clazz + ".js";
+
 			for (Iterator it = classpath.iterator(); it.hasNext();) {
-				File cp = (File) it.next();
-				File pkg = cp;
-				String clazz = classname;
-				if (classname.indexOf('.') > 0) {
-					int idx = classname.lastIndexOf('.');
-					String pkgname = classname.substring(0, idx).replaceAll(
-							"\\.", "/");
-					clazz = classname.substring(idx + 1);
-					String pkgPath = FilenameUtils.concat(cp.getAbsolutePath(),
-							pkgname);
+				File pkg = (File) it.next();
+				if (cn.pkgPath.length() > 0) {
+					String pkgPath = FilenameUtils.concat(
+							pkg.getAbsolutePath(), cn.pkgPath);
 					pkg = new File(pkgPath);
 					if (!pkg.exists())
 						continue;
 				}
-				final String filename = clazz + ".js";
 				File[] list = pkg.listFiles(new FilenameFilter() {
 					public boolean accept(File dir, String name) {
 						int i = name.lastIndexOf('.');
@@ -136,7 +172,7 @@ public class JsContextManager {
 				if (list == null || list.length == 0)
 					continue;
 				if (list.length == 1) {
-					js = createJs(list[0]);
+					js = createJs(list[0], classname);
 					break;
 				} else
 					throw new RuntimeException("There are " + list.length
@@ -146,6 +182,44 @@ public class JsContextManager {
 			checkUpdate(js);
 		}
 		return js;
+	}
+
+	public List getJsClasses(String classname) throws Exception {
+		List result = new ArrayList();
+		if (classname.indexOf('*') >= 0) {
+			Classname cn = new Classname(classname);
+
+			for (Iterator it = classpath.iterator(); it.hasNext();) {
+				File cp = (File) it.next();
+				File pkg = cp;
+				if (cn.pkgPath.length() > 0) {
+					String pkgPath = FilenameUtils.concat(cp.getAbsolutePath(),
+							cn.pkgPath);
+					pkg = new File(pkgPath);
+					if (!pkg.exists())
+						continue;
+				}
+				File[] cs = pkg.listFiles();
+				for (int i = 0; i < cs.length; i++) {
+					File file = cs[i];
+					if (file.isDirectory())
+						continue;
+					String name = file.getName();
+					if (name.toLowerCase().endsWith(".js")) {
+						String clazz = name.substring(0, name.indexOf('.'));
+						JsFile js = getJsClass(cn.pkg
+								+ (cn.pkg.length() > 0 ? "." : "") + clazz);
+						if (js != null && !result.contains(js))
+							result.add(js);
+					}
+				}
+			}
+		} else {
+			JsFile js = getJsClass(classname);
+			if (js != null && !result.contains(js))
+				result.add(js);
+		}
+		return result;
 	}
 
 	/**
@@ -166,5 +240,8 @@ public class JsContextManager {
 		js.setLastModified(file.lastModified());
 		js.setLength(file.length());
 		js.setImported(JavaScriptDocument.getImportInfo(content));
+		if (log.isDebugEnabled()) {
+			log.debug("JsFile created: " + js);
+		}
 	}
 }
