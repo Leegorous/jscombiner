@@ -76,9 +76,14 @@ public class JsContextManager {
 			File config = new File(path, "config.js");
 			if (config.exists()) {
 				Set cp = JavaScriptDocument.configClasspath(config);
-				for (Iterator it = cp.iterator(); it.hasNext();) {
-					File item = (File) it.next();
-					configClasspath(item);
+				if (cp != null) {
+					for (Iterator it = cp.iterator(); it.hasNext();) {
+						File item = (File) it.next();
+						configClasspath(item);
+					}
+				} else {
+					log.debug("could not find classpath definition in "
+							+ config.getAbsolutePath());
 				}
 			}
 			classpath.add(path);
