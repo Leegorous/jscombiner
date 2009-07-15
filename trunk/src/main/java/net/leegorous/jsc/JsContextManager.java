@@ -55,7 +55,7 @@ public class JsContextManager {
 	private void checkUpdate(JsFile js, File file) throws Exception {
 		if (file.lastModified() > js.getLastModified()
 				|| file.length() != js.getLength()) {
-			if (js.getPath().equals(file.getAbsoluteFile()))
+			if (js.getPath().equals(file.getAbsolutePath()))
 				refresh(js, file);
 			else
 				throw new RuntimeException("File not match [" + js.getPath()
@@ -107,7 +107,7 @@ public class JsContextManager {
 		JsFile js = new JsFile();
 		refresh(js, file);
 
-		files.put(file.getAbsoluteFile(), js);
+		files.put(file.getAbsolutePath(), js);
 		if (js.getName() == null) {
 			if (classname != null) {
 				files.put(classname, js);
