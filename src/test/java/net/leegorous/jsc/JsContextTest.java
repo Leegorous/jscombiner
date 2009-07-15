@@ -3,6 +3,9 @@
  */
 package net.leegorous.jsc;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author leegorous
  * 
@@ -36,6 +39,34 @@ public class JsContextTest extends JavaScriptFileTestSupport {
 		} catch (Exception e) {
 			assertTrue(e instanceof LoopedImportException);
 		}
+	}
+
+	public void testMergeList() {
+		List arr1 = new ArrayList() {
+			{
+				add("a");
+				add("b");
+				add("c");
+				add("d");
+				add("e");
+			}
+		};
+
+		List arr2 = new ArrayList() {
+			{
+				add("k");
+				add("c");
+				add("m");
+				add("g");
+				add("d");
+			}
+		};
+
+		List result = ctx.mergeList(arr1, arr2);
+		assertEquals(8, result.size());
+
+		arr1 = new ArrayList();
+		assertEquals(arr2, ctx.mergeList(arr1, arr2));
 	}
 
 }
