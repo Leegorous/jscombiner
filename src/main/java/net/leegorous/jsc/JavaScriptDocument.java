@@ -45,7 +45,7 @@ public class JavaScriptDocument {
 			.compile("@class\\s*(\\w+(\\.\\w+)*)" + PATTERN_SUFFIX);
 
 	protected static Pattern CLASSPATH_PATTERN = Pattern
-			.compile("@classpath\\s*(\\.|[\\w\\.]+|([\\w\\.]+/)+)"
+			.compile("@classpath\\s*(\\.|[\\w\\.]+|([\\w\\.]+/)+[\\w\\.]*)"
 					+ PATTERN_SUFFIX);
 
 	public static Set configClasspath(File file) throws Exception {
