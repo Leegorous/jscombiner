@@ -14,7 +14,7 @@
 		<body-content>JSP</body-content>
 		<attribute>
 			<name>path</name>
-			<required>true</required>
+			<required>no</required>
 			<rtexprvalue>false</rtexprvalue>
 		</attribute>
 	</tag>
