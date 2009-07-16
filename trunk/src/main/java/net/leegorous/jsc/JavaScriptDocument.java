@@ -37,16 +37,25 @@ public class JavaScriptDocument {
 
 	protected static String PATTERN_SUFFIX = "\\s*(;\\s*(\\r?\\n)?|\\r?\\n)";
 
+	protected static String _NAME_PATTERN_SUFFIX = "\\s*(\\w+(\\.\\w+)*)"
+			+ PATTERN_SUFFIX;
+
 	protected static Pattern IMPORT_PATTERN = Pattern
 			.compile("@import\\s*(\\*|\\w+(\\.\\w+)*(\\.\\*)?)"
 					+ PATTERN_SUFFIX);
 
-	protected static Pattern CLASS_PATTERN = Pattern
-			.compile("@class\\s*(\\w+(\\.\\w+)*)" + PATTERN_SUFFIX);
+	protected static Pattern CLASS_PATTERN = Pattern.compile("@class"
+			+ _NAME_PATTERN_SUFFIX);
+
+	protected static Pattern INTERFACE_PATTERN = Pattern.compile("@interface"
+			+ _NAME_PATTERN_SUFFIX);
 
 	protected static Pattern CLASSPATH_PATTERN = Pattern
 			.compile("@classpath\\s*(\\.|[\\w\\.]+|([\\w\\.]+/)+[\\w\\.]*)"
 					+ PATTERN_SUFFIX);
+
+	protected static Pattern NAME_PATTERN = Pattern.compile("@name"
+			+ _NAME_PATTERN_SUFFIX);
 
 	public static Set configClasspath(File file) throws Exception {
 		String content = readFile(file);
@@ -78,7 +87,19 @@ public class JavaScriptDocument {
 	}
 
 	public static String getClassName(String content) {
-		Matcher m = CLASS_PATTERN.matcher(content);
+		String name = getMatched(content, CLASS_PATTERN);
+		if (name == null) {
+			name = getMatched(content, INTERFACE_PATTERN);
+		}
+		return name;
+	}
+
+	public static String getScriptName(String content) {
+		return getMatched(content, NAME_PATTERN);
+	}
+
+	private static String getMatched(String content, Pattern pattern) {
+		Matcher m = pattern.matcher(content);
 		if (m.find()) {
 			return m.group(1);
 		}
@@ -122,7 +143,7 @@ public class JavaScriptDocument {
 		Matcher m = IMPORT_PATTERN.matcher(content);
 
 		if (m.find()) {
-			config = new HashSet();
+			config = new TreeSet();
 			do {
 				if (m.groupCount() > 1) {
 					config.add(m.group(1));

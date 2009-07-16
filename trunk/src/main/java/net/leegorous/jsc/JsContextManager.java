@@ -9,11 +9,11 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
@@ -24,8 +24,6 @@ import org.apache.commons.logging.LogFactory;
  * 
  */
 public class JsContextManager {
-
-	protected Log log = LogFactory.getLog(this.getClass());
 
 	private class Classname {
 		String pkg = "";
@@ -43,7 +41,9 @@ public class JsContextManager {
 		}
 	}
 
-	private Set classpath = Collections.synchronizedSet(new HashSet());
+	protected Log log = LogFactory.getLog(this.getClass());
+
+	private Set classpath = Collections.synchronizedSet(new TreeSet());
 
 	private Map files = Collections.synchronizedMap(new HashMap());
 
@@ -113,12 +113,15 @@ public class JsContextManager {
 		refresh(js, file);
 
 		files.put(file.getAbsolutePath(), js);
-		if (js.getName() == null) {
-			if (classname != null) {
-				files.put(classname, js);
-			}
-		} else {
+		if (js.getClazz() != null) {
+			files.put(js.getClazz(), js);
+		}
+		if (js.getName() != null) {
 			files.put(js.getName(), js);
+		}
+		if (js.getClazz() == null && js.getName() == null && classname != null) {
+			files.put(classname, js);
+
 		}
 		return js;
 	}
@@ -240,7 +243,8 @@ public class JsContextManager {
 		if (cp != null)
 			configClasspath(cp);
 
-		js.setName(JavaScriptDocument.getClassName(content));
+		js.setClazz(JavaScriptDocument.getClassName(content));
+		js.setName(JavaScriptDocument.getScriptName(content));
 		js.setPath(file.getAbsolutePath());
 		js.setLastModified(file.lastModified());
 		js.setLength(file.length());

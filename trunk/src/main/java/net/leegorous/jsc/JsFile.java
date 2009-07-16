@@ -13,12 +13,17 @@ import java.util.Set;
 public class JsFile {
 
 	/**
+	 * The class name of javascript
+	 */
+	private String clazz;
+
+	/**
 	 * The file path of javascript
 	 */
 	private String path;
 
 	/**
-	 * The class name of javascript
+	 * The name of javascript
 	 */
 	private String name;
 
@@ -27,6 +32,13 @@ public class JsFile {
 	private long length;
 
 	private Set imported;
+
+	/**
+	 * @return the clazz
+	 */
+	public String getClazz() {
+		return clazz;
+	}
 
 	/**
 	 * @return the imported
@@ -52,6 +64,14 @@ public class JsFile {
 
 	public String getPath() {
 		return path;
+	}
+
+	/**
+	 * @param clazz
+	 *            the clazz to set
+	 */
+	public void setClazz(String clazz) {
+		this.clazz = clazz;
 	}
 
 	/**
