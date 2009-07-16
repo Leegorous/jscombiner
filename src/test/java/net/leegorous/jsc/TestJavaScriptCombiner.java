@@ -89,7 +89,7 @@ public class TestJavaScriptCombiner extends JavaScriptFileTestSupport {
 
 		// Read directory configuration
 		ArrayList list = jsc.readTestConfig(getTestConfig("."));
-		assertEquals(3, list.size());
+		assertEquals(4, list.size());
 
 		// Read file configuration
 		list = jsc.readTestConfig(getTestConfig(testTarget1));

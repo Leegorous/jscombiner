@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -62,7 +63,7 @@ public class JavaScriptDocument {
 		return configClasspath(file, content);
 	}
 
-	private static Set configClasspath(File file, String content)
+	protected static Set configClasspath(File file, String content)
 			throws FileNotFoundException {
 		if (!file.isDirectory()) {
 			file = file.getParentFile();
@@ -138,12 +139,12 @@ public class JavaScriptDocument {
 		return classpath;
 	}
 
-	public static Set getImportInfo(String content) {
-		Set config = null;
+	public static List getImportInfo(String content) {
+		List config = null;
 		Matcher m = IMPORT_PATTERN.matcher(content);
 
 		if (m.find()) {
-			config = new TreeSet();
+			config = new ArrayList();
 			do {
 				if (m.groupCount() > 1) {
 					config.add(m.group(1));
@@ -264,7 +265,7 @@ public class JavaScriptDocument {
 
 	protected ArrayList getImportConfig(String content) {
 		ArrayList config = null;
-		Set info = getImportInfo(content);
+		List info = getImportInfo(content);
 		if (info != null) {
 			config = new ArrayList(info);
 			if (log.isDebugEnabled()) {

@@ -1,3 +1,5 @@
 /**
  * @classpath ../
+ * 
+ * @import global
  */

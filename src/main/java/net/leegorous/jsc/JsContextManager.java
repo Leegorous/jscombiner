@@ -47,6 +47,12 @@ public class JsContextManager {
 
 	private Map files = Collections.synchronizedMap(new HashMap());
 
+	private Map classpathConfig = new HashMap();
+
+	public JsFile getClasspathConfig(String path) {
+		return (JsFile) classpathConfig.get(path);
+	}
+
 	private void checkUpdate(JsFile js) throws Exception {
 		File file = new File(js.getPath());
 		checkUpdate(js, file);
@@ -73,9 +79,20 @@ public class JsContextManager {
 	 */
 	public void configClasspath(File path) throws Exception {
 		if (!classpath.contains(path)) {
+			classpath.add(path);
 			File config = new File(path, "config.js");
 			if (config.exists()) {
-				Set cp = JavaScriptDocument.configClasspath(config);
+				String content = JavaScriptDocument.readFile(config);
+				Set cp = JavaScriptDocument.configClasspath(config, content);
+				JsFile cfg = new JsFile();
+				cfg.setLastModified(path.lastModified());
+				cfg.setImported(JavaScriptDocument.getImportInfo(content));
+				if (log.isDebugEnabled()) {
+					log.debug("found classpath config: " + cfg);
+				}
+
+				classpathConfig.put(path.getAbsolutePath(), cfg);
+
 				if (cp != null) {
 					for (Iterator it = cp.iterator(); it.hasNext();) {
 						File item = (File) it.next();
@@ -86,7 +103,6 @@ public class JsContextManager {
 							+ config.getAbsolutePath());
 				}
 			}
-			classpath.add(path);
 			log.info("found classpath: " + path.getAbsolutePath());
 		}
 	}
@@ -121,7 +137,6 @@ public class JsContextManager {
 		}
 		if (js.getClazz() == null && js.getName() == null && classname != null) {
 			files.put(classname, js);
-
 		}
 		return js;
 	}
@@ -240,8 +255,10 @@ public class JsContextManager {
 	protected void refresh(JsFile js, File file) throws Exception {
 		String content = JavaScriptDocument.readFile(file);
 		File cp = JavaScriptDocument.resolveClasspath(file, content);
-		if (cp != null)
+		if (cp != null) {
 			configClasspath(cp);
+			js.setClasspath(cp.getAbsolutePath());
+		}
 
 		js.setClazz(JavaScriptDocument.getClassName(content));
 		js.setName(JavaScriptDocument.getScriptName(content));

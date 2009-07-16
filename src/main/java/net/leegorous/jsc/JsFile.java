@@ -4,7 +4,7 @@
 package net.leegorous.jsc;
 
 import java.util.Date;
-import java.util.Set;
+import java.util.List;
 
 /**
  * @author leegorous
@@ -23,6 +23,11 @@ public class JsFile {
 	private String path;
 
 	/**
+	 * The classpath of javascript
+	 */
+	private String classpath;
+
+	/**
 	 * The name of javascript
 	 */
 	private String name;
@@ -31,7 +36,14 @@ public class JsFile {
 
 	private long length;
 
-	private Set imported;
+	private List imported;
+
+	/**
+	 * @return the classpath
+	 */
+	public String getClasspath() {
+		return classpath;
+	}
 
 	/**
 	 * @return the clazz
@@ -43,7 +55,7 @@ public class JsFile {
 	/**
 	 * @return the imported
 	 */
-	public Set getImported() {
+	public List getImported() {
 		return imported;
 	}
 
@@ -67,6 +79,14 @@ public class JsFile {
 	}
 
 	/**
+	 * @param classpath
+	 *            the classpath to set
+	 */
+	public void setClasspath(String classpath) {
+		this.classpath = classpath;
+	}
+
+	/**
 	 * @param clazz
 	 *            the clazz to set
 	 */
@@ -78,7 +98,7 @@ public class JsFile {
 	 * @param imported
 	 *            the imported to set
 	 */
-	public void setImported(Set imported) {
+	public void setImported(List imported) {
 		this.imported = imported;
 	}
 

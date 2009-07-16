@@ -27,8 +27,9 @@ public class JsContextTest extends JavaScriptFileTestSupport {
 	public void testLoad() throws Exception {
 		String name = getFileName("/scripts/test/pkg/b.js");
 		ctx.load(name);
-		assertEquals(3, ctx.getList().size());
-		log.debug(ctx.getList());
+		List list = ctx.getList();
+		log.debug(list);
+		assertEquals(4, list.size());
 	}
 
 	public void testLoadLoopImported() throws Exception {
