@@ -61,7 +61,8 @@ public class JsContextManagerTest extends JavaScriptFileTestSupport {
 		File file = new File(getFileName("/scripts/test/pkg/b.js"));
 		mgr.refresh(js, file);
 
-		assertEquals("pkg.b", js.getName());
+		assertEquals("b", js.getName());
+		assertEquals("pkg.b", js.getClazz());
 		// To make sure the classpaths have been added
 		assertEquals(2, mgr.getClasspath().size());
 

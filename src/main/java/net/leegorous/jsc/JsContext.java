@@ -24,30 +24,33 @@ public class JsContext {
 		this.manager = manager;
 	}
 
-	protected void addJs(Stack stack, JsFile js, List list) throws Exception {
-		if (!list.contains(js)) {
-			int idx = stack.size() > 0 ? list.indexOf(stack.peek()) : 0;
-			// add the context list in a reverse order
-			list.add(idx, js);
-
+	protected List processJs(Stack stack, JsFile js) throws Exception {
+		List result = new ArrayList();
+		if (!stack.contains(js)) {
 			stack.add(js);
+
 			Set imported = js.getImported();
 			if (imported != null) {
 				for (Iterator it = imported.iterator(); it.hasNext();) {
 					String clazz = (String) it.next();
 					List classes = manager.getJsClasses(clazz);
+
 					for (Iterator it2 = classes.iterator(); it2.hasNext();) {
 						JsFile j = (JsFile) it2.next();
-						addJs(stack, j, list);
+						List cls = processJs(stack, j);
+						result = mergeList(result, cls);
 					}
 				}
 			}
+			result.add(js);
+
 			stack.pop();
 		} else {
 			if (stack.contains(js))
 				throw new LoopedImportException("found " + js.getName()
 						+ " in dependency path " + stack);
 		}
+		return result;
 	}
 
 	public JsContextManager getContextManager() {
@@ -69,8 +72,7 @@ public class JsContext {
 
 		JsFile js = manager.getJs(path);
 		Stack stack = new Stack();
-		List scripts = new ArrayList();
-		addJs(stack, js, scripts);
+		List scripts = processJs(stack, js);
 
 		if (list == null) {
 			list = scripts;
