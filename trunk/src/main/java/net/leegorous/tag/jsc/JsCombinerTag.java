@@ -158,18 +158,25 @@ public class JsCombinerTag extends BodyTagSupport {
 			}
 		}
 
-		List list = ctx.getList();
+		List list = null;
+		try {
+			list = ctx.getList();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		StringBuffer buf = new StringBuffer();
-		for (Iterator it = list.iterator(); it.hasNext();) {
-			JsFile js = (JsFile) it.next();
-			String jspath = js.getPath();
-			String scriptPath = jspath.substring(root.length());
+		if (list != null) {
+			for (Iterator it = list.iterator(); it.hasNext();) {
+				JsFile js = (JsFile) it.next();
+				String jspath = js.getPath();
+				String scriptPath = jspath.substring(root.length());
 
-			buf.append(preTag);
-			buf.append(ctxPath);
-			buf.append(scriptPath);
-			buf.append(subTag);
+				buf.append(preTag);
+				buf.append(ctxPath);
+				buf.append(scriptPath);
+				buf.append(subTag);
+			}
 		}
 		result = buf;
 	}

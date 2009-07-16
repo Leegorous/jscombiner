@@ -6,6 +6,7 @@ package net.leegorous.jsc;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -29,7 +30,7 @@ public class JsContext {
 		if (!stack.contains(js)) {
 			stack.add(js);
 
-			Set imported = js.getImported();
+			List imported = js.getImported();
 			if (imported != null) {
 				for (Iterator it = imported.iterator(); it.hasNext();) {
 					String clazz = (String) it.next();
@@ -59,9 +60,46 @@ public class JsContext {
 
 	/**
 	 * @return the list
+	 * @throws Exception
 	 */
-	public List getList() {
-		return list;
+	public List getList() throws Exception {
+		Set cp = new HashSet();
+		for (Iterator it = list.iterator(); it.hasNext();) {
+			JsFile js = (JsFile) it.next();
+			cp.add(js.getClasspath());
+		}
+		List cfgs = new ArrayList();
+		for (Iterator it = cp.iterator(); it.hasNext();) {
+			String p = (String) it.next();
+			JsFile cfg = manager.getClasspathConfig(p);
+			if (cfg != null)
+				cfgs.add(cfg);
+		}
+
+		List commons = new ArrayList();
+		for (Iterator it = cfgs.iterator(); it.hasNext();) {
+			JsFile js = (JsFile) it.next();
+			List imported = js.getImported();
+			if (imported != null && imported.size() > 0) {
+				for (Iterator it2 = imported.iterator(); it2.hasNext();) {
+					String clazz = (String) it2.next();
+					List classes = manager.getJsClasses(clazz);
+
+					for (Iterator it3 = classes.iterator(); it3.hasNext();) {
+						JsFile j = (JsFile) it3.next();
+						List cls = processJs(new Stack(), j);
+						commons = mergeList(commons, cls);
+					}
+				}
+			}
+		}
+		for (Iterator it = commons.iterator(); it.hasNext();) {
+			JsFile js = (JsFile) it.next();
+			if (list.contains(js))
+				list.remove(js);
+		}
+		commons.addAll(list);
+		return commons;
 	}
 
 	public void load(String path) throws Exception {
