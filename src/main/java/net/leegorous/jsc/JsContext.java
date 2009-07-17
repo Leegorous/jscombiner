@@ -25,35 +25,6 @@ public class JsContext {
 		this.manager = manager;
 	}
 
-	protected List processJs(Stack stack, JsFile js) throws Exception {
-		List result = new ArrayList();
-		if (!stack.contains(js)) {
-			stack.add(js);
-
-			List imported = js.getImported();
-			if (imported != null) {
-				for (Iterator it = imported.iterator(); it.hasNext();) {
-					String clazz = (String) it.next();
-					List classes = manager.getJsClasses(clazz);
-
-					for (Iterator it2 = classes.iterator(); it2.hasNext();) {
-						JsFile j = (JsFile) it2.next();
-						List cls = processJs(stack, j);
-						result = mergeList(result, cls);
-					}
-				}
-			}
-			result.add(js);
-
-			stack.pop();
-		} else {
-			if (stack.contains(js))
-				throw new LoopedImportException("found " + js.getName()
-						+ " in dependency path " + stack);
-		}
-		return result;
-	}
-
 	public JsContextManager getContextManager() {
 		return manager;
 	}
@@ -79,19 +50,10 @@ public class JsContext {
 		List commons = new ArrayList();
 		for (Iterator it = cfgs.iterator(); it.hasNext();) {
 			JsFile js = (JsFile) it.next();
-			List imported = js.getImported();
-			if (imported != null && imported.size() > 0) {
-				for (Iterator it2 = imported.iterator(); it2.hasNext();) {
-					String clazz = (String) it2.next();
-					List classes = manager.getJsClasses(clazz);
-
-					for (Iterator it3 = classes.iterator(); it3.hasNext();) {
-						JsFile j = (JsFile) it3.next();
-						List cls = processJs(new Stack(), j);
-						commons = mergeList(commons, cls);
-					}
-				}
-			}
+			List imported = processImport(new Stack(), js);
+			if (imported == null)
+				imported = new ArrayList();
+			commons = mergeList(commons, imported);
 		}
 		for (Iterator it = commons.iterator(); it.hasNext();) {
 			JsFile js = (JsFile) it.next();
@@ -154,6 +116,46 @@ public class JsContext {
 		for (; start < list2.size(); start++) {
 			result.add(list2.get(start));
 		}
+		return result;
+	}
+
+	protected List processJs(Stack stack, JsFile js) throws Exception {
+		List result = null;
+		if (!stack.contains(js)) {
+			stack.add(js);
+
+			result = processImport(stack, js);
+			if (result == null) {
+				result = new ArrayList();
+			}
+			result.add(js);
+
+			stack.pop();
+		} else {
+			if (stack.contains(js))
+				throw new LoopedImportException("found " + js.getName()
+						+ " in dependency path " + stack);
+		}
+		return result;
+	}
+
+	protected List processImport(Stack stack, JsFile js) throws Exception {
+		List result = new ArrayList();
+
+		List imported = js.getImported();
+		if (imported != null) {
+			for (Iterator it = imported.iterator(); it.hasNext();) {
+				String clazz = (String) it.next();
+				List classes = manager.getJsClasses(clazz);
+
+				for (Iterator it2 = classes.iterator(); it2.hasNext();) {
+					JsFile j = (JsFile) it2.next();
+					List cls = processJs(stack, j);
+					result = mergeList(result, cls);
+				}
+			}
+		}
+
 		return result;
 	}
 
