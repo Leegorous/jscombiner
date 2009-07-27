@@ -205,7 +205,6 @@ public class JavaScriptDocument {
 	}
 
 	public ArrayList getClasses(String path) throws IOException {
-		Set cp = new TreeSet();
 		SubFileFilter filter = new SubFileFilter();
 		String[] paths = path.split("/");
 		ArrayList result = new ArrayList();
@@ -213,7 +212,9 @@ public class JavaScriptDocument {
 			throw new IOException("Can not find " + path);
 		// ArrayList tmpCp = classPaths;
 		Set tmpCp = classpath;
+		Set cp = null;
 		for (int i = 0, j = paths.length - 1; i < j; i++) {
+			cp = new TreeSet();
 			String item = paths[i].trim();
 			if (item.length() == 0)
 				continue;
@@ -230,7 +231,7 @@ public class JavaScriptDocument {
 			}
 			tmpCp = cp;
 		}
-		if (cp.size() == 0)
+		if (cp == null || cp.size() == 0)
 			cp = classpath;
 		String item = paths[paths.length - 1];
 		for (Iterator it = cp.iterator(); it.hasNext();) {
@@ -377,5 +378,14 @@ public class JavaScriptDocument {
 
 	protected void setLinker(JavaScriptDocument linker) {
 		this.linker = linker;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	public String toString() {
+		return this.fileName;
 	}
 }
