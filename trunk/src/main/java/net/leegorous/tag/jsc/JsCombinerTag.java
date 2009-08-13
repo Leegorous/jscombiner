@@ -132,6 +132,8 @@ public class JsCombinerTag extends BodyTagSupport {
 			pageContext.getOut().write(result.toString());
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			path = null;
 		}
 		return super.doEndTag();
 	}
