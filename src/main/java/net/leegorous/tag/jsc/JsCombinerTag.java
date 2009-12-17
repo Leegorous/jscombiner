@@ -18,6 +18,9 @@ import net.leegorous.jsc.JsContextManager;
 import net.leegorous.jsc.JsFile;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.web.context.WebApplicationContext;
 
 /**
@@ -26,6 +29,7 @@ import org.springframework.web.context.WebApplicationContext;
  */
 public class JsCombinerTag extends BodyTagSupport {
 
+	protected Log log = LogFactory.getLog(this.getClass());
 	/**
 	 * The serialVersionUID of JsCombinerTag
 	 */
@@ -76,10 +80,13 @@ public class JsCombinerTag extends BodyTagSupport {
 					.getAttribute(
 							WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
 			if (webAppContext != null) {
-				JsContextManager mgr = (JsContextManager) webAppContext
-						.getBean("jsContextManager");
-				if (mgr != null)
-					jsContextManager = mgr;
+				try {
+					jsContextManager = (JsContextManager) webAppContext
+							.getBean("jsContextManager");
+				} catch (BeansException e) {
+					log.info(e.getMessage());
+					// kill the bean defined error
+				}
 			}
 
 			if (jsContextManager == null)
@@ -173,6 +180,10 @@ public class JsCombinerTag extends BodyTagSupport {
 				JsFile js = (JsFile) it.next();
 				String jspath = js.getPath();
 				String scriptPath = jspath.substring(root.length());
+
+				if (scriptPath.indexOf('\\') != -1) {
+					scriptPath = scriptPath.replaceAll("\\\\", "/");
+				}
 
 				buf.append(preTag);
 				buf.append(ctxPath);
