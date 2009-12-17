@@ -25,9 +25,10 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.leegorous.util.FileCharsetDetector;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.mozilla.intl.chardet.FileCharsetDetector;
 
 public class JavaScriptCombiner extends JavaScriptDocument {
 
