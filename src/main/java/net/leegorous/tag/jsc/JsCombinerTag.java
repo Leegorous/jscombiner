@@ -3,8 +3,10 @@
  */
 package net.leegorous.tag.jsc;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -17,6 +19,7 @@ import net.leegorous.jsc.JsContext;
 import net.leegorous.jsc.JsContextManager;
 import net.leegorous.jsc.JsFile;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,9 +38,17 @@ public class JsCombinerTag extends BodyTagSupport {
 	 */
 	private static final long serialVersionUID = -5327283965223602242L;
 
+	public static final String MODE_DEV = "dev";
+
+	public static final String MODE_PROD = "prod";
+
 	protected static JsContextManager jsContextManager;
 
 	private String path;
+
+	private String mode = MODE_DEV;
+
+	private String output;
 
 	private StringBuffer result;
 
@@ -56,6 +67,24 @@ public class JsCombinerTag extends BodyTagSupport {
 		content.clearBody();
 		process();
 		return SKIP_BODY;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.servlet.jsp.tagext.BodyTagSupport#doEndTag()
+	 */
+	public int doEndTag() throws JspException {
+		try {
+			pageContext.getOut().write(result.toString());
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			mode = null;
+			output = null;
+			path = null;
+		}
+		return super.doEndTag();
 	}
 
 	/*
@@ -121,37 +150,19 @@ public class JsCombinerTag extends BodyTagSupport {
 		return result;
 	}
 
-	/**
-	 * @param path
-	 *            the path to set
-	 */
-	public void setPath(String path) {
-		this.path = path;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see javax.servlet.jsp.tagext.BodyTagSupport#doEndTag()
-	 */
-	public int doEndTag() throws JspException {
-		try {
-			pageContext.getOut().write(result.toString());
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			path = null;
-		}
-		return super.doEndTag();
-	}
-
 	private void process() {
+		if (MODE_PROD.equals(mode) && output == null) {
+			throw new IllegalArgumentException(
+					"property 'output' could not be null in 'prod' mode");
+		}
+
 		path = StringUtils.trimToNull(path);
 		if (path == null)
 			return;
 		JsContextManager mgr = getJsContextManager();
 		JsContext ctx = mgr.createContext();
 		String root = getRealPath("/");
+		log.debug(root);
 		String ctxPath = ((HttpServletRequest) pageContext.getRequest())
 				.getContextPath();
 
@@ -167,31 +178,111 @@ public class JsCombinerTag extends BodyTagSupport {
 			}
 		}
 
-		List list = null;
-		try {
-			list = ctx.getList();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		StringBuffer buf = new StringBuffer();
-		if (list != null) {
-			for (Iterator it = list.iterator(); it.hasNext();) {
-				JsFile js = (JsFile) it.next();
-				String jspath = js.getPath();
-				String scriptPath = jspath.substring(root.length());
-
-				if (scriptPath.indexOf('\\') != -1) {
-					scriptPath = scriptPath.replaceAll("\\\\", "/");
-				}
-
-				buf.append(preTag);
-				buf.append(ctxPath);
-				buf.append(scriptPath);
-				buf.append(subTag);
+		if (MODE_DEV.equals(mode)) {
+			List list = null;
+			try {
+				list = ctx.getList();
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
+
+			StringBuffer buf = new StringBuffer();
+			if (list != null) {
+				for (Iterator it = list.iterator(); it.hasNext();) {
+					JsFile js = (JsFile) it.next();
+					String jspath = js.getPath();
+					String scriptPath = translateScriptPath(root, jspath);
+
+					buf.append(preTag);
+					buf.append(ctxPath);
+					buf.append(scriptPath);
+					buf.append(subTag);
+				}
+			}
+			result = buf;
 		}
-		result = buf;
+
+		if (MODE_PROD.equals(mode)) {
+			String content = "";
+			try {
+				content = ctx.getScriptsContent();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			File file = getOutput(output);
+			String scriptPath = translateScriptPath(root, file
+					.getAbsolutePath());
+			try {
+				FileUtils.writeStringToFile(file, content, "UTF-8");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			StringBuffer buf = new StringBuffer();
+			buf.append(preTag);
+			buf.append(ctxPath);
+			buf.append(scriptPath);
+			buf.append(subTag);
+			result = buf;
+		}
+	}
+
+	private String translateScriptPath(String root, String jspath) {
+		String scriptPath = jspath.substring(root.length());
+
+		if (scriptPath.indexOf('\\') != -1) {
+			scriptPath = scriptPath.replaceAll("\\\\", "/");
+		}
+		return scriptPath;
+	}
+
+	private File getOutput(String path) {
+		int idx = path.lastIndexOf('/');
+		String folderPath;
+		String fileName;
+		if (idx < 0) {
+			folderPath = "/";
+			fileName = path;
+		} else {
+			String f = path.substring(0, idx + 1);
+			if (f.charAt(0) != '/')
+				f = "/" + f;
+			folderPath = f;
+			fileName = path.substring(idx + 1);
+		}
+		File folder = new File(getRealPath(folderPath));
+		if (!folder.exists()) {
+			folder.mkdirs();
+		}
+
+		if (fileName.endsWith(".js")) {
+			fileName.subSequence(0, fileName.length() - 3);
+		}
+
+		return new File(folder, fileName + "." + (new Date().getTime()) + ".js");
+	}
+
+	public void setMode(String mode) {
+		if (mode == null)
+			return;
+		mode = mode.toLowerCase();
+		if (MODE_DEV.equals(mode) || MODE_PROD.equals(mode))
+			this.mode = mode;
+	}
+
+	public void setOutput(String output) {
+		this.output = StringUtils.trimToNull(output);
+		if (output.endsWith("/")) {
+			throw new IllegalArgumentException(
+					"property 'output' should be /path/to/file , and it can't ends with '/'");
+		}
+	}
+
+	/**
+	 * @param path
+	 *            the path to set
+	 */
+	public void setPath(String path) {
+		this.path = path;
 	}
 
 }
