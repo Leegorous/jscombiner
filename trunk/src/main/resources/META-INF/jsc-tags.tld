@@ -13,9 +13,22 @@
 		<tag-class>net.leegorous.tag.jsc.JsCombinerTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
+			<description>the script paths, separate with ';'</description>
 			<name>path</name>
 			<required>no</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>Execution mode: dev or prod</description>
+			<name>mode</name>
+			<required>no</required>
 			<rtexprvalue>false</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>the generated script file path, required in 'prod' mode</description>
+			<name>output</name>
+			<required>no</required>
+			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 	</tag>
 </taglib>
