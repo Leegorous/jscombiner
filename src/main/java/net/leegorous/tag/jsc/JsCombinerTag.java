@@ -4,6 +4,7 @@
 package net.leegorous.tag.jsc;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -32,7 +33,10 @@ import org.springframework.web.context.WebApplicationContext;
  */
 public class JsCombinerTag extends BodyTagSupport {
 
+	public static final String DEFAULT_ENCODING = "UTF-8";
+
 	protected Log log = LogFactory.getLog(this.getClass());
+
 	/**
 	 * The serialVersionUID of JsCombinerTag
 	 */
@@ -124,6 +128,69 @@ public class JsCombinerTag extends BodyTagSupport {
 		return jsContextManager;
 	}
 
+	private File getOutput(String path, long lastModified) {
+		int idx = path.lastIndexOf('/');
+		String folderPath;
+		String fileName;
+		if (idx < 0) {
+			folderPath = "/";
+			fileName = path;
+		} else {
+			String f = path.substring(0, idx + 1);
+			if (f.charAt(0) != '/')
+				f = "/" + f;
+			folderPath = f;
+			fileName = path.substring(idx + 1);
+		}
+		File folder = new File(getRealPath(folderPath));
+		if (!folder.exists()) {
+			folder.mkdirs();
+		}
+
+		if (fileName.endsWith(".js")) {
+			fileName = fileName.substring(0, fileName.length() - 3);
+		}
+
+		final String qName = fileName;
+		final long[] last = new long[] { 0 };
+		final String[] fName = new String[1];
+		File[] files = folder.listFiles(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				if (name.startsWith(qName + ".") && name.endsWith(".js")) {
+					String tail = name.substring(qName.length() + 1, name
+							.length() - 3);
+					if (StringUtils.isNumeric(tail)) {
+						long a = Long.parseLong(tail);
+						if (a > last[0]) {
+							last[0] = a;
+							fName[0] = name;
+						}
+						return true;
+					}
+				}
+				return false;
+			}
+		});
+
+		if (files != null) {
+			for (int i = 0; i < files.length; i++) {
+				File f = files[i];
+				if (!f.getName().equals(fName[0])) {
+					f.delete();
+				} else if (last[0] < lastModified) {
+					f.delete();
+				}
+			}
+		}
+
+		if (last[0] > lastModified)
+			fileName = fName[0];
+		else
+			fileName = fileName + "." + (new Date().getTime()) + ".js";
+
+		return new File(folder, fileName);
+	}
+
 	/**
 	 * @return the path
 	 */
@@ -178,14 +245,14 @@ public class JsCombinerTag extends BodyTagSupport {
 			}
 		}
 
-		if (MODE_DEV.equals(mode)) {
-			List list = null;
-			try {
-				list = ctx.getList();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		List list = null;
+		try {
+			list = ctx.getList();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
+		if (MODE_DEV.equals(mode)) {
 			StringBuffer buf = new StringBuffer();
 			if (list != null) {
 				for (Iterator it = list.iterator(); it.hasNext();) {
@@ -203,20 +270,27 @@ public class JsCombinerTag extends BodyTagSupport {
 		}
 
 		if (MODE_PROD.equals(mode)) {
-			String content = "";
-			try {
-				content = ctx.getScriptsContent();
-			} catch (Exception e) {
-				e.printStackTrace();
+			long last = 0;
+			for (Iterator it = list.iterator(); it.hasNext();) {
+				JsFile js = (JsFile) it.next();
+				if (js.getLastModified() > last)
+					last = js.getLastModified();
 			}
-			File file = getOutput(output);
+			File file = getOutput(output, last);
 			String scriptPath = translateScriptPath(root, file
 					.getAbsolutePath());
-			try {
-				FileUtils.writeStringToFile(file, content, "UTF-8");
-			} catch (IOException e) {
-				e.printStackTrace();
+
+			if (!file.exists()) {
+				String content = "";
+				try {
+					content = ctx.getScriptsContent();
+					FileUtils
+							.writeStringToFile(file, content, DEFAULT_ENCODING);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
+
 			StringBuffer buf = new StringBuffer();
 			buf.append(preTag);
 			buf.append(ctxPath);
@@ -224,41 +298,6 @@ public class JsCombinerTag extends BodyTagSupport {
 			buf.append(subTag);
 			result = buf;
 		}
-	}
-
-	private String translateScriptPath(String root, String jspath) {
-		String scriptPath = jspath.substring(root.length());
-
-		if (scriptPath.indexOf('\\') != -1) {
-			scriptPath = scriptPath.replaceAll("\\\\", "/");
-		}
-		return scriptPath;
-	}
-
-	private File getOutput(String path) {
-		int idx = path.lastIndexOf('/');
-		String folderPath;
-		String fileName;
-		if (idx < 0) {
-			folderPath = "/";
-			fileName = path;
-		} else {
-			String f = path.substring(0, idx + 1);
-			if (f.charAt(0) != '/')
-				f = "/" + f;
-			folderPath = f;
-			fileName = path.substring(idx + 1);
-		}
-		File folder = new File(getRealPath(folderPath));
-		if (!folder.exists()) {
-			folder.mkdirs();
-		}
-
-		if (fileName.endsWith(".js")) {
-			fileName.subSequence(0, fileName.length() - 3);
-		}
-
-		return new File(folder, fileName + "." + (new Date().getTime()) + ".js");
 	}
 
 	public void setMode(String mode) {
@@ -283,6 +322,15 @@ public class JsCombinerTag extends BodyTagSupport {
 	 */
 	public void setPath(String path) {
 		this.path = path;
+	}
+
+	private String translateScriptPath(String root, String jspath) {
+		String scriptPath = jspath.substring(root.length());
+
+		if (scriptPath.indexOf('\\') != -1) {
+			scriptPath = scriptPath.replaceAll("\\\\", "/");
+		}
+		return scriptPath;
 	}
 
 }
