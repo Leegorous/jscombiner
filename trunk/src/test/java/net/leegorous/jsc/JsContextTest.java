@@ -24,6 +24,13 @@ public class JsContextTest extends JavaScriptFileTestSupport {
 		super.setUp();
 	}
 
+	public void testGetScriptsContent() throws Exception {
+		String name = getFileName("/scripts/test/pkg/b.js");
+		ctx.load(name);
+		String content = ctx.getScriptsContent();
+		log.debug(content);
+	}
+
 	public void testLoad() throws Exception {
 		String name = getFileName("/scripts/test/pkg/b.js");
 		ctx.load(name);

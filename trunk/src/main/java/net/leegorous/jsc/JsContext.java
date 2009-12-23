@@ -17,6 +17,8 @@ import java.util.Stack;
  * 
  */
 public class JsContext {
+	public static String LINE_BREAK = System.getProperty("line.separator");
+
 	private JsContextManager manager;
 
 	private List list = new ArrayList();
@@ -30,6 +32,30 @@ public class JsContext {
 	}
 
 	/**
+	 * Get the merged scripts content.<br/>
+	 * <strong>Important</strong>: Invoke {@link #getScriptsContent()} after
+	 * loading scripts with {@link #load(String)}
+	 * 
+	 * @return the merged scripts content
+	 * @throws Exception
+	 */
+	public String getScriptsContent() throws Exception {
+		List list = getList();
+		StringBuffer buf = new StringBuffer();
+		for (Iterator it = list.iterator(); it.hasNext();) {
+			JsFile js = (JsFile) it.next();
+			buf.append(JavaScriptDocument.readFile(js.getFile())).append(
+					LINE_BREAK);
+		}
+		return buf.toString();
+	}
+
+	/**
+	 * Get the merged scripts list. All scripts with dependencies and common
+	 * imports defined in configuration file.<br/>
+	 * <strong>Important</strong>: Invoke {@link #getList()} after loading
+	 * scripts with {@link #load(String)}
+	 * 
 	 * @return the list
 	 * @throws Exception
 	 */
@@ -64,6 +90,12 @@ public class JsContext {
 		return commons;
 	}
 
+	/**
+	 * Load the script
+	 * 
+	 * @param path
+	 * @throws Exception
+	 */
 	public void load(String path) throws Exception {
 		File file = new File(path);
 		if (!file.exists()) {

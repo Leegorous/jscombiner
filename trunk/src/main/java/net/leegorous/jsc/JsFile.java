@@ -3,6 +3,7 @@
  */
 package net.leegorous.jsc;
 
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 
@@ -27,6 +28,8 @@ public class JsFile {
 	 */
 	private String classpath;
 
+	private File file;
+
 	/**
 	 * The name of javascript
 	 */
@@ -50,6 +53,13 @@ public class JsFile {
 	 */
 	public String getClazz() {
 		return clazz;
+	}
+
+	public File getFile() {
+		if (file == null) {
+			file = new File(path);
+		}
+		return file;
 	}
 
 	/**
