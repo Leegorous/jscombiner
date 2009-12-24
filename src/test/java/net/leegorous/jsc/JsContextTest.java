@@ -35,6 +35,10 @@ public class JsContextTest extends JavaScriptFileTestSupport {
 		hierarchy = ctx.getHierarchy();
 		assertNull(hierarchy.getFile());
 		assertEquals(2, hierarchy.getChilds().size());
+
+		List list = hierarchy.serialize();
+		assertEquals(4, list.size());
+		log.debug(list);
 	}
 
 	public void testBuildHierarchyLoopImported() throws Exception {
