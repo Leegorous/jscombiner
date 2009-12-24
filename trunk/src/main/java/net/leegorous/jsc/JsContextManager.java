@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import net.leegorous.util.ConfigPattern;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -24,6 +26,9 @@ import org.apache.commons.logging.LogFactory;
  * 
  */
 public class JsContextManager {
+
+	private static ConfigPattern PATTERN_MODULE = new ConfigPattern("module",
+			"\\w+(\\.\\w+)*");
 
 	private class Classname {
 		String pkg = "";
@@ -260,6 +265,7 @@ public class JsContextManager {
 			js.setClasspath(cp.getAbsolutePath());
 		}
 
+		js.setModule(PATTERN_MODULE.getValue(content));
 		js.setClazz(JavaScriptDocument.getClassName(content));
 		js.setName(JavaScriptDocument.getScriptName(content));
 		js.setPath(file.getAbsolutePath());

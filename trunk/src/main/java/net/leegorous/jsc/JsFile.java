@@ -30,6 +30,8 @@ public class JsFile {
 
 	private File file;
 
+	private String module;
+
 	/**
 	 * The name of javascript
 	 */
@@ -80,6 +82,10 @@ public class JsFile {
 		return length;
 	}
 
+	public String getModule() {
+		return module;
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -124,6 +130,10 @@ public class JsFile {
 		this.length = length;
 	}
 
+	public void setModule(String module) {
+		this.module = module;
+	}
+
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -138,8 +148,18 @@ public class JsFile {
 		StringBuffer buf = new StringBuffer();
 		buf.append("{\n");
 		buf.append("name:" + name + "\n");
+
+		if (clazz != null)
+			buf.append("class: " + clazz + "\n");
+
+		if (module != null)
+			buf.append("module: " + module + "\n");
+
 		buf.append("path:" + path + "\n");
-		buf.append("imported:" + imported + "\n");
+
+		if (imported != null && imported.size() > 0)
+			buf.append("imported:" + imported + "\n");
+
 		buf.append("modified:" + date + "\n");
 		buf.append("length:" + length + "\n");
 		buf.append('}');
