@@ -43,6 +43,22 @@ public class JsFile {
 
 	private List imported;
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	public boolean equals(Object obj) {
+		if (obj == null)
+			return false;
+		if (path == null)
+			return false;
+		if (!(obj instanceof JsFile))
+			return false;
+		JsFile f = (JsFile) obj;
+		return path.equals(f.getPath());
+	}
+
 	/**
 	 * @return the classpath
 	 */

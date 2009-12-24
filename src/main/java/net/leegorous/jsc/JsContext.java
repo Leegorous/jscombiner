@@ -3,8 +3,6 @@
  */
 package net.leegorous.jsc;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -21,10 +19,30 @@ public class JsContext {
 
 	private JsContextManager manager;
 
+	private JsNode hierarchy;
+
 	private List list = new ArrayList();
 
 	public JsContext(JsContextManager manager) {
 		this.manager = manager;
+	}
+
+	public void buildHierarchy(String path) throws Exception {
+		JsFile js = manager.getJs(path);
+		if (hierarchy == null) {
+			JsNode tree = new JsNode(js);
+			tree.setManager(manager);
+			hierarchy = tree;
+			tree.process();
+		} else {
+			JsNode tree = new JsNode();
+			tree.setManager(manager);
+			hierarchy.setParent(tree);
+			tree.addChild(hierarchy);
+			hierarchy = tree;
+
+			hierarchy.addChild(js);
+		}
 	}
 
 	public JsContextManager getContextManager() {
@@ -32,22 +50,10 @@ public class JsContext {
 	}
 
 	/**
-	 * Get the merged scripts content.<br/>
-	 * <strong>Important</strong>: Invoke {@link #getScriptsContent()} after
-	 * loading scripts with {@link #load(String)}
-	 * 
-	 * @return the merged scripts content
-	 * @throws Exception
+	 * @return the hierarchy
 	 */
-	public String getScriptsContent() throws Exception {
-		List list = getList();
-		StringBuffer buf = new StringBuffer();
-		for (Iterator it = list.iterator(); it.hasNext();) {
-			JsFile js = (JsFile) it.next();
-			buf.append(JavaScriptDocument.readFile(js.getFile())).append(
-					LINE_BREAK);
-		}
-		return buf.toString();
+	public JsNode getHierarchy() {
+		return hierarchy;
 	}
 
 	/**
@@ -91,17 +97,31 @@ public class JsContext {
 	}
 
 	/**
+	 * Get the merged scripts content.<br/>
+	 * <strong>Important</strong>: Invoke {@link #getScriptsContent()} after
+	 * loading scripts with {@link #load(String)}
+	 * 
+	 * @return the merged scripts content
+	 * @throws Exception
+	 */
+	public String getScriptsContent() throws Exception {
+		List list = getList();
+		StringBuffer buf = new StringBuffer();
+		for (Iterator it = list.iterator(); it.hasNext();) {
+			JsFile js = (JsFile) it.next();
+			buf.append(JavaScriptDocument.readFile(js.getFile())).append(
+					LINE_BREAK);
+		}
+		return buf.toString();
+	}
+
+	/**
 	 * Load the script
 	 * 
 	 * @param path
 	 * @throws Exception
 	 */
 	public void load(String path) throws Exception {
-		File file = new File(path);
-		if (!file.exists()) {
-			throw new FileNotFoundException(path);
-		}
-
 		JsFile js = manager.getJs(path);
 		Stack stack = new Stack();
 		List scripts = processJs(stack, js);
@@ -151,26 +171,6 @@ public class JsContext {
 		return result;
 	}
 
-	protected List processJs(Stack stack, JsFile js) throws Exception {
-		List result = null;
-		if (!stack.contains(js)) {
-			stack.add(js);
-
-			result = processImport(stack, js);
-			if (result == null) {
-				result = new ArrayList();
-			}
-			result.add(js);
-
-			stack.pop();
-		} else {
-			if (stack.contains(js))
-				throw new LoopedImportException("found " + js.getName()
-						+ " in dependency path " + stack);
-		}
-		return result;
-	}
-
 	protected List processImport(Stack stack, JsFile js) throws Exception {
 		List result = new ArrayList();
 
@@ -188,6 +188,26 @@ public class JsContext {
 			}
 		}
 
+		return result;
+	}
+
+	protected List processJs(Stack stack, JsFile js) throws Exception {
+		List result = null;
+		if (!stack.contains(js)) {
+			stack.add(js);
+
+			result = processImport(stack, js);
+			if (result == null) {
+				result = new ArrayList();
+			}
+			result.add(js);
+
+			stack.pop();
+		} else {
+			if (stack.contains(js))
+				throw new LoopedImportException("found " + js.getName()
+						+ " in dependency path " + stack);
+		}
 		return result;
 	}
 

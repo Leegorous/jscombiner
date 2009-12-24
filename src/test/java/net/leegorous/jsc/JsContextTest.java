@@ -24,6 +24,29 @@ public class JsContextTest extends JavaScriptFileTestSupport {
 		super.setUp();
 	}
 
+	public void testBuildHierarchy() throws Exception {
+		String name = getFileName("/scripts/test/pkg/b.js");
+		ctx.buildHierarchy(name);
+		JsNode hierarchy = ctx.getHierarchy();
+		assertNotNull(hierarchy.getFile());
+
+		name = getFileName("/scripts/test/pkg/d.js");
+		ctx.buildHierarchy(name);
+		hierarchy = ctx.getHierarchy();
+		assertNull(hierarchy.getFile());
+		assertEquals(2, hierarchy.getChilds().size());
+	}
+
+	public void testBuildHierarchyLoopImported() throws Exception {
+		String name = getFileName("/scripts/test/pkg/n1.js");
+		try {
+			ctx.buildHierarchy(name);
+			fail("LoopedImportException expected");
+		} catch (Exception e) {
+			assertTrue(e instanceof LoopedImportException);
+		}
+	}
+
 	public void testGetScriptsContent() throws Exception {
 		String name = getFileName("/scripts/test/pkg/b.js");
 		ctx.load(name);

@@ -154,11 +154,22 @@ public class JsContextManager {
 		return files;
 	}
 
-	public JsFile getJs(String path) throws Exception {
-		File file = new File(path);
+	private File checkFile(File file) throws FileNotFoundException {
+		if (file == null)
+			throw new IllegalArgumentException("file could not be null");
 		if (!file.exists()) {
-			throw new FileNotFoundException(path);
+			throw new FileNotFoundException(file.getPath());
 		}
+		return file;
+	}
+
+	private File checkFile(String path) throws FileNotFoundException {
+		return checkFile(new File(path));
+	}
+
+	public JsFile getJs(String path) throws Exception {
+		File file = checkFile(path);
+
 		JsFile js = (JsFile) files.get(path);
 
 		if (js == null) {
