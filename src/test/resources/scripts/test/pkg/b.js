@@ -1,4 +1,5 @@
 /**
+ * @module testB
  * @import	a  ;  
  * @import    pkg.c
  * 
