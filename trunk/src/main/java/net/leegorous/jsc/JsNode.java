@@ -18,19 +18,6 @@ public class JsNode {
 	private JsNode root;
 	private List refs;
 
-	public void addRef(JsNode ref) {
-		if (refs == null)
-			refs = new ArrayList();
-		refs.add(ref);
-	}
-
-	/**
-	 * @return the refs
-	 */
-	public List getRefs() {
-		return refs;
-	}
-
 	private JsContextManager manager;
 
 	public JsNode() {
@@ -65,6 +52,12 @@ public class JsNode {
 		}
 		childs.add(node);
 		node.addRef(this);
+	}
+
+	public void addRef(JsNode ref) {
+		if (refs == null)
+			refs = new ArrayList();
+		refs.add(ref);
 	}
 
 	private void checkImport(JsFile js) throws LoopedImportException {
@@ -107,33 +100,27 @@ public class JsNode {
 	}
 
 	/**
+	 * @return the refs
+	 */
+	public List getRefs() {
+		return refs;
+	}
+
+	/**
 	 * @return the root
 	 */
 	public JsNode getRoot() {
 		return root;
 	}
 
-	public List serialize() {
-		return serialize(null);
-	}
-
-	private List serialize(List list) {
-		if (list == null)
-			list = new ArrayList();
-
-		if (childs != null && childs.size() > 0) {
-			for (Iterator it = childs.iterator(); it.hasNext();) {
-				JsNode node = (JsNode) it.next();
-				node.serialize(list);
-			}
-		}
-		if (file != null && !list.contains(file)) {
-			list.add(file);
-		}
-		return list;
-	}
-
 	public void process() throws Exception {
+		processImport(file);
+
+		JsFile cfg = manager.getClasspathConfig(file.getClasspath());
+		processImport(cfg);
+	}
+
+	private void processImport(JsFile file) throws Exception {
 		if (file == null)
 			return;
 		List imported = file.getImported();
@@ -163,6 +150,26 @@ public class JsNode {
 			}
 		}
 		return null;
+	}
+
+	public List serialize() {
+		return serialize(null);
+	}
+
+	private List serialize(List list) {
+		if (list == null)
+			list = new ArrayList();
+
+		if (childs != null && childs.size() > 0) {
+			for (Iterator it = childs.iterator(); it.hasNext();) {
+				JsNode node = (JsNode) it.next();
+				node.serialize(list);
+			}
+		}
+		if (file != null && !list.contains(this)) {
+			list.add(this);
+		}
+		return list;
 	}
 
 	/**

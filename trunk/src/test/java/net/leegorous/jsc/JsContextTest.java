@@ -37,7 +37,7 @@ public class JsContextTest extends JavaScriptFileTestSupport {
 		assertEquals(2, hierarchy.getChilds().size());
 
 		List list = hierarchy.serialize();
-		assertEquals(4, list.size());
+		assertEquals(5, list.size());
 		log.debug(list);
 	}
 
