@@ -113,9 +113,16 @@ public class JsNode {
 		return root;
 	}
 
+	/**
+	 * Process the dependencies
+	 * 
+	 * @throws Exception
+	 */
 	public void process() throws Exception {
+		// process dependencies
 		processImport(file);
 
+		// process the common dependencies defined in classpath configuration
 		JsFile cfg = manager.getClasspathConfig(file.getClasspath());
 		processImport(cfg);
 	}
@@ -124,15 +131,15 @@ public class JsNode {
 		if (file == null)
 			return;
 		List imported = file.getImported();
-		if (imported != null) {
-			for (Iterator it = imported.iterator(); it.hasNext();) {
-				String clazz = (String) it.next();
-				List classes = manager.getJsClasses(clazz);
+		if (imported == null)
+			return;
+		for (Iterator it = imported.iterator(); it.hasNext();) {
+			String clazz = (String) it.next();
+			List classes = manager.getJsClasses(clazz);
 
-				for (Iterator it2 = classes.iterator(); it2.hasNext();) {
-					JsFile j = (JsFile) it2.next();
-					addChild(j);
-				}
+			for (Iterator it2 = classes.iterator(); it2.hasNext();) {
+				JsFile j = (JsFile) it2.next();
+				addChild(j);
 			}
 		}
 	}
