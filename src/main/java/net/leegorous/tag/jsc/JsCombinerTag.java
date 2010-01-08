@@ -80,10 +80,12 @@ public class JsCombinerTag extends BodyTagSupport {
 	 */
 	public int doEndTag() throws JspException {
 		try {
-			pageContext.getOut().write(result.toString());
+			String str = result != null ? result.toString() : "";
+			pageContext.getOut().write(str);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
+			result = null;
 			mode = null;
 			output = null;
 			path = null;
@@ -252,7 +254,7 @@ public class JsCombinerTag extends BodyTagSupport {
 			e.printStackTrace();
 		}
 
-		if (MODE_DEV.equals(mode)) {
+		if (mode == null || MODE_DEV.equals(mode)) {
 			StringBuffer buf = new StringBuffer();
 			if (list != null) {
 				for (Iterator it = list.iterator(); it.hasNext();) {
