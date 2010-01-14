@@ -201,7 +201,14 @@ public class JsCombinerTag extends BodyTagSupport {
 	}
 
 	private String getRealPath(String path) {
-		return pageContext.getServletContext().getRealPath(path);
+		String p = pageContext.getServletContext().getRealPath(path);
+		File file = new File(p);
+		try {
+			p = file.getCanonicalPath();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		return p;
 	}
 
 	public List normalizePath(String path) {
