@@ -109,24 +109,23 @@ public class JsCombinerTag extends BodyTagSupport {
 	}
 
 	private JsContextManager getJsContextManager() {
-		if (jsContextManager == null) {
-			WebApplicationContext webAppContext = (WebApplicationContext) pageContext
-					.getServletContext()
-					.getAttribute(
-							WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
-			if (webAppContext != null) {
-				try {
+		try {
+			if (jsContextManager == null) {
+				WebApplicationContext webAppContext = (WebApplicationContext) pageContext
+						.getServletContext()
+						.getAttribute(
+								WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
+				if (webAppContext != null) {
 					jsContextManager = (JsContextManager) webAppContext
 							.getBean("jsContextManager");
-				} catch (BeansException e) {
-					log.info(e.getMessage());
-					// kill the bean defined error
 				}
 			}
-
-			if (jsContextManager == null)
-				jsContextManager = new JsContextManager();
+		} catch (Throwable e) {
+			log.error(e.getMessage());
+			// kill the bean defined error
 		}
+		if (jsContextManager == null)
+			jsContextManager = new JsContextManager();
 		return jsContextManager;
 	}
 
