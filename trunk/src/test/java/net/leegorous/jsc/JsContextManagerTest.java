@@ -71,4 +71,13 @@ public class JsContextManagerTest extends JavaScriptFileTestSupport {
 		assertEquals(2, js.getImported().size());
 	}
 
+	public void testRefreshPackages() throws Exception {
+		String path = getFileName("/scripts");
+		JsPackage pkg = new JsPackage();
+		pkg.add(path);
+		mgr.addPackage(pkg);
+		mgr.refreshPackages();
+		assertEquals(4, mgr.getPackages().size());
+	}
+
 }

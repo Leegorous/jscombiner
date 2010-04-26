@@ -27,9 +27,6 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JsContextManager {
 
-	private static ConfigPattern PATTERN_MODULE = new ConfigPattern("module",
-			"\\w+(\\.\\w+)*");
-
 	private class Classname {
 		String pkg = "";
 		String pkgPath = "";
@@ -46,6 +43,9 @@ public class JsContextManager {
 		}
 	}
 
+	private static ConfigPattern PATTERN_MODULE = new ConfigPattern("module",
+			"\\w+(\\.\\w+)*");
+
 	protected Log log = LogFactory.getLog(this.getClass());
 
 	private Set classpath = Collections.synchronizedSet(new TreeSet());
@@ -54,8 +54,28 @@ public class JsContextManager {
 
 	private Map classpathConfig = new HashMap();
 
-	public JsFile getClasspathConfig(String path) {
-		return (JsFile) classpathConfig.get(path);
+	private Map pkgs = Collections.synchronizedMap(new HashMap());
+
+	public void addPackage(JsPackage pkg) {
+		JsPackage p = (JsPackage) pkgs.get(pkg.getName());
+		if (p == null) {
+			pkgs.put(pkg.getName(), pkg);
+		} else {
+			p.add(pkg);
+		}
+	}
+
+	private File checkFile(File file) throws FileNotFoundException {
+		if (file == null)
+			throw new IllegalArgumentException("file could not be null");
+		if (!file.exists()) {
+			throw new FileNotFoundException(file.getPath());
+		}
+		return file;
+	}
+
+	private File checkFile(String path) throws FileNotFoundException {
+		return checkFile(new File(path));
 	}
 
 	private void checkUpdate(JsFile js) throws Exception {
@@ -150,21 +170,12 @@ public class JsContextManager {
 		return classpath;
 	}
 
+	public JsFile getClasspathConfig(String path) {
+		return (JsFile) classpathConfig.get(path);
+	}
+
 	protected Map getFiles() {
 		return files;
-	}
-
-	private File checkFile(File file) throws FileNotFoundException {
-		if (file == null)
-			throw new IllegalArgumentException("file could not be null");
-		if (!file.exists()) {
-			throw new FileNotFoundException(file.getPath());
-		}
-		return file;
-	}
-
-	private File checkFile(String path) throws FileNotFoundException {
-		return checkFile(new File(path));
 	}
 
 	public JsFile getJs(String path) throws Exception {
@@ -261,6 +272,10 @@ public class JsContextManager {
 		return result;
 	}
 
+	public Map getPackages() {
+		return pkgs;
+	}
+
 	/**
 	 * Refresh the jsFile object with the script file and the content within
 	 * 
@@ -286,5 +301,15 @@ public class JsContextManager {
 		if (log.isDebugEnabled()) {
 			log.debug("JsFile created: " + js);
 		}
+	}
+
+	public synchronized void refreshPackages() {
+		JsPackage pkg = (JsPackage) pkgs.get("");
+		Map newPkgs = pkgs;
+		if (pkgs.size() > 1) {
+			newPkgs = Collections.synchronizedMap(new HashMap());
+			newPkgs.put(pkg.getName(), pkg);
+		}
+		pkgs = pkg.refresh(newPkgs);
 	}
 }
