@@ -19,10 +19,6 @@ public class JsPackage {
 	private String name;
 	private Set paths;
 
-	public Set getPaths() {
-		return paths;
-	}
-
 	public JsPackage() {
 		this("");
 	}
@@ -45,10 +41,6 @@ public class JsPackage {
 		paths.add(file);
 	}
 
-	public void add(String path) {
-		this.add(new File(path));
-	}
-
 	public void add(JsPackage pkg) {
 		if (name.equals(pkg.getName())) {
 			paths.addAll(pkg.getPaths());
@@ -57,8 +49,16 @@ public class JsPackage {
 		}
 	}
 
+	public void add(String path) {
+		this.add(new File(path));
+	}
+
 	public String getName() {
 		return name;
+	}
+
+	public Set getPaths() {
+		return paths;
 	}
 
 	public Map refresh(Map pkgs) {
