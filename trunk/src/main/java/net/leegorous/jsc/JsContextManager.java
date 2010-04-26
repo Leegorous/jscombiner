@@ -335,4 +335,10 @@ public class JsContextManager {
 		lastRefresh = System.currentTimeMillis();
 		return true;
 	}
+
+	public void addClasspath(String path) {
+		JsPackage pkg = new JsPackage();
+		pkg.add(path);
+		addPackage(pkg);
+	}
 }

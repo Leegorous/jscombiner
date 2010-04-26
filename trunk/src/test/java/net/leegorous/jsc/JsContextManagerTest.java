@@ -4,6 +4,7 @@
 package net.leegorous.jsc;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.List;
 
 /**
@@ -22,6 +23,11 @@ public class JsContextManagerTest extends JavaScriptFileTestSupport {
 	protected void setUp() throws Exception {
 		mgr = new JsContextManager();
 		super.setUp();
+	}
+
+	public void testAddClasspath() throws URISyntaxException {
+		mgr.addClasspath(getFileName("/scripts/test"));
+		assertEquals(1, mgr.getPackages().size());
 	}
 
 	public void testConfigClasspath() throws Exception {
