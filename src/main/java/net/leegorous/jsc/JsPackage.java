@@ -99,7 +99,7 @@ public class JsPackage {
 	}
 
 	public JsFile getJs(String name) throws Exception {
-		JsFile result;
+		String pkgPrefix = this.name + (this.name.length() > 0 ? "." : "");
 		for (Iterator it = paths.iterator(); it.hasNext();) {
 			File path = (File) it.next();
 			File[] subs = path.listFiles();
@@ -108,9 +108,9 @@ public class JsPackage {
 				if (file.isDirectory())
 					continue;
 				if (file.getName().equals(name + ".js")) {
-					result = new JsFile();
-					result.setClasspath(this.name);
-					result.setClazz(name);
+					JsFile result = new JsFile();
+
+					result.setClazz(pkgPrefix + name);
 					result.setFile(file);
 					result.refresh();
 					return result;

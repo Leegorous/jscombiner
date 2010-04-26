@@ -34,6 +34,7 @@ public class JsPackageTest extends JavaScriptFileTestSupport {
 		JsFile js = pkg.getJs("a");
 		assertNotNull(js);
 		assertEquals("a", js.getClazz());
+		assertTrue(js.getLength() > 0);
 	}
 
 	public void testGetName() {

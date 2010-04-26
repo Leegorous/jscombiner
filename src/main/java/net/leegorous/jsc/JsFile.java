@@ -66,6 +66,10 @@ public class JsFile {
 		return file.equals(f.getFile());
 	}
 
+	public boolean exist() {
+		return file.exists();
+	}
+
 	/**
 	 * @return the classpath
 	 */
@@ -114,11 +118,16 @@ public class JsFile {
 		return file.getAbsolutePath();
 	}
 
+	/**
+	 * Refresh the js setting: module, lastModified, length and imported classes
+	 * 
+	 * @throws Exception
+	 */
 	public void refresh() throws Exception {
 		String content = JavaScriptDocument.readFile(file);
 
 		this.setModule(PATTERN_MODULE.getValue(content));
-		this.setName(JavaScriptDocument.getScriptName(content));
+
 		this.setLastModified(file.lastModified());
 		this.setLength(file.length());
 		this.setImported(JavaScriptDocument.getImportInfo(content));
