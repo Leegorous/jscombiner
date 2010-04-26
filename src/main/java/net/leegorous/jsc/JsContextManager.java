@@ -9,6 +9,7 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -218,6 +219,35 @@ public class JsContextManager {
 		} else {
 			throw new JavaScriptNotFoundException(name);
 		}
+	}
+
+	public Set getClazzes(String name) throws Exception {
+		Classname cn = new Classname(name);
+		Set result = new HashSet();
+		if (cn.clazz.equals("*")) {
+			JsPackage pkg = getPackage(cn.pkg);
+			boolean refreshed = false;
+			if (pkg == null) {
+				log.debug("refresh action 1");
+				refreshed = refreshPackages();
+			}
+			if (refreshed) {
+				pkg = getPackage(cn.pkg);
+			}
+			Set names;
+			if (pkg == null) {
+				return null;
+			} else {
+				names = pkg.listClazz();
+			}
+			for (Iterator it = names.iterator(); it.hasNext();) {
+				String n = (String) it.next();
+				result.add(getClazz(n));
+			}
+		} else {
+			result.add(getClazz(cn.clazz));
+		}
+		return result;
 	}
 
 	protected Map getFiles() {
