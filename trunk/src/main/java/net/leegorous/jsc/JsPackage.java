@@ -5,6 +5,7 @@ package net.leegorous.jsc;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -96,6 +97,31 @@ public class JsPackage {
 		}
 
 		return pkgs;
+	}
+
+	public JsFile getJs(String name) {
+		JsFile result;
+		for (Iterator it = paths.iterator(); it.hasNext();) {
+			File path = (File) it.next();
+			File[] subs = path.listFiles();
+			for (int i = 0; i < subs.length; i++) {
+				File file = subs[i];
+				if (file.isDirectory())
+					continue;
+				if (file.getName().equals(name + ".js")) {
+					result = new JsFile();
+					try {
+						result.setClasspath(this.name);
+						result.setClazz(name);
+						result.setPath(file.getCanonicalPath());
+						return result;
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 }
