@@ -272,6 +272,17 @@ public class JsContextManager {
 		return result;
 	}
 
+	/**
+	 * Get the package by name
+	 * 
+	 * @param name
+	 *            the package name
+	 * @return the package object
+	 */
+	public JsPackage getPackage(String name) {
+		return (JsPackage) pkgs.get(name);
+	}
+
 	public Map getPackages() {
 		return pkgs;
 	}
