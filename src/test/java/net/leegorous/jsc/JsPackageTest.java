@@ -4,6 +4,7 @@
 package net.leegorous.jsc;
 
 import java.util.HashMap;
+import java.util.Set;
 
 /**
  * @author leegorous
@@ -39,6 +40,12 @@ public class JsPackageTest extends JavaScriptFileTestSupport {
 
 	public void testGetName() {
 		assertEquals("", pkg.getName());
+	}
+
+	public void testListClazz() {
+		Set clazzes = pkg.listClazz();
+		assertTrue(clazzes.size() > 1);
+		assertTrue(clazzes.contains("a") && clazzes.contains("global"));
 	}
 
 	public void testRefresh() {

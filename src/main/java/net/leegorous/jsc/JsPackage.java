@@ -120,4 +120,32 @@ public class JsPackage {
 		return null;
 	}
 
+	public Set listClazz() {
+		Set result = new HashSet();
+		String prefix = name;
+		if (prefix.length() > 0)
+			prefix += ".";
+
+		for (Iterator it = paths.iterator(); it.hasNext();) {
+			File path = (File) it.next();
+			File[] subs = path.listFiles();
+			for (int i = 0; i < subs.length; i++) {
+				File f = subs[i];
+				if (f.isDirectory())
+					continue;
+
+				String n = f.getName();
+				if (!n.endsWith(".js"))
+					continue;
+
+				int dot = n.lastIndexOf('.');
+				if (n.indexOf('.') != dot)
+					continue;
+
+				result.add(prefix + n.substring(0, dot));
+			}
+		}
+		return result;
+	}
+
 }
