@@ -7,12 +7,21 @@ import java.io.File;
 import java.util.Date;
 import java.util.List;
 
+import net.leegorous.util.ConfigPattern;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @author leegorous
  * 
  */
 public class JsFile {
 
+	private static Log log = LogFactory.getLog(JsFile.class);
+
+	private static ConfigPattern PATTERN_MODULE = new ConfigPattern("module",
+			"\\w+(\\.\\w+)*");
 	/**
 	 * The class name of javascript
 	 */
@@ -49,14 +58,12 @@ public class JsFile {
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	public boolean equals(Object obj) {
-		if (obj == null)
-			return false;
-		if (path == null)
+		if (obj == null || file == null)
 			return false;
 		if (!(obj instanceof JsFile))
 			return false;
 		JsFile f = (JsFile) obj;
-		return path.equals(f.getPath());
+		return file.equals(f.getFile());
 	}
 
 	/**
@@ -74,9 +81,6 @@ public class JsFile {
 	}
 
 	public File getFile() {
-		if (file == null) {
-			file = new File(path);
-		}
 		return file;
 	}
 
@@ -107,7 +111,21 @@ public class JsFile {
 	}
 
 	public String getPath() {
-		return path;
+		return file.getAbsolutePath();
+	}
+
+	public void refresh() throws Exception {
+		String content = JavaScriptDocument.readFile(file);
+
+		this.setModule(PATTERN_MODULE.getValue(content));
+		this.setName(JavaScriptDocument.getScriptName(content));
+		this.setLastModified(file.lastModified());
+		this.setLength(file.length());
+		this.setImported(JavaScriptDocument.getImportInfo(content));
+
+		if (log.isDebugEnabled()) {
+			log.debug("JsFile created: " + this);
+		}
 	}
 
 	/**
@@ -124,6 +142,10 @@ public class JsFile {
 	 */
 	public void setClazz(String clazz) {
 		this.clazz = clazz;
+	}
+
+	public void setFile(File file) {
+		this.file = file;
 	}
 
 	/**
@@ -155,7 +177,7 @@ public class JsFile {
 	}
 
 	public void setPath(String path) {
-		this.path = path;
+		this.setFile(new File(path));
 	}
 
 	public String toString() {
