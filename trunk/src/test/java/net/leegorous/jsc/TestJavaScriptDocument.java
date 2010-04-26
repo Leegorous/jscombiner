@@ -28,7 +28,7 @@ public class TestJavaScriptDocument extends JavaScriptFileTestSupport {
 
 	protected Log log = LogFactory.getLog(this.getClass());
 
-	public void testFindImport() throws Exception {
+	private void _testFindImport() throws Exception {
 		File file = new File(getFileName("/scripts/test/pkg/b.js"));
 		Set classPaths = new TreeSet();
 		classPaths.add(new File(getFileName("/scripts")));

@@ -27,8 +27,8 @@ public class JsContext {
 		this.manager = manager;
 	}
 
-	public void buildHierarchy(String path) throws Exception {
-		JsFile js = manager.getJs(path);
+	public void buildHierarchy(String name) throws Exception {
+		JsFile js = manager.getClazz(name);
 		if (hierarchy == null) {
 			JsNode tree = new JsNode(js);
 			tree.setManager(manager);

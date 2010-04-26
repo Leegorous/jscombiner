@@ -245,7 +245,7 @@ public class JsContextManager {
 				result.add(getClazz(n));
 			}
 		} else {
-			result.add(getClazz(cn.clazz));
+			result.add(getClazz(name));
 		}
 		return result;
 	}

@@ -12,6 +12,7 @@ import java.util.List;
  */
 public class JsContextTest extends JavaScriptFileTestSupport {
 
+	private JsContextManager mgr;
 	private JsContext ctx;
 
 	/*
@@ -20,31 +21,36 @@ public class JsContextTest extends JavaScriptFileTestSupport {
 	 * @see junit.framework.TestCase#setUp()
 	 */
 	protected void setUp() throws Exception {
-		ctx = new JsContextManager().createContext();
+		mgr = new JsContextManager();
+		ctx = mgr.createContext();
 		super.setUp();
 	}
 
 	public void testBuildHierarchy() throws Exception {
-		String name = getFileName("/scripts/test/pkg/b.js");
-		ctx.buildHierarchy(name);
+		mgr.addClasspath(getFileName("/scripts/test"));
+		// String name = getFileName("pkg.b");
+		ctx.buildHierarchy("pkg.b");
 		JsNode hierarchy = ctx.getHierarchy();
 		assertNotNull(hierarchy.getFile());
 
-		name = getFileName("/scripts/test/pkg/d.js");
-		ctx.buildHierarchy(name);
+		// name = getFileName("/scripts/test/pkg/d.js");
+		ctx.buildHierarchy("pkg.d");
 		hierarchy = ctx.getHierarchy();
 		assertNull(hierarchy.getFile());
 		assertEquals(2, hierarchy.getChilds().size());
 
 		List list = hierarchy.serialize();
-		assertEquals(5, list.size());
 		log.debug(list);
+
+		// without classpath config, no more 5 but only 4 js imported
+		assertEquals(4, list.size());
 	}
 
 	public void testBuildHierarchyLoopImported() throws Exception {
-		String name = getFileName("/scripts/test/pkg/n1.js");
+		mgr.addClasspath(getFileName("/scripts/test"));
+		// String name = getFileName("/scripts/test/pkg/n1.js");
 		try {
-			ctx.buildHierarchy(name);
+			ctx.buildHierarchy("pkg.n1");
 			fail("LoopedImportException expected");
 		} catch (Exception e) {
 			assertTrue(e instanceof LoopedImportException);

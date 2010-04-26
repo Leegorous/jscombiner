@@ -6,6 +6,7 @@ package net.leegorous.jsc;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author leegorous
@@ -123,8 +124,8 @@ public class JsNode {
 		processImport(file);
 
 		// process the common dependencies defined in classpath configuration
-		JsFile cfg = manager.getClasspathConfig(file.getClasspath());
-		processImport(cfg);
+		// JsFile cfg = manager.getClasspathConfig(file.getClasspath());
+		// processImport(cfg);
 	}
 
 	private void processImport(JsFile file) throws Exception {
@@ -135,7 +136,7 @@ public class JsNode {
 			return;
 		for (Iterator it = imported.iterator(); it.hasNext();) {
 			String clazz = (String) it.next();
-			List classes = manager.getJsClasses(clazz);
+			Set classes = manager.getClazzes(clazz);
 
 			for (Iterator it2 = classes.iterator(); it2.hasNext();) {
 				JsFile j = (JsFile) it2.next();
