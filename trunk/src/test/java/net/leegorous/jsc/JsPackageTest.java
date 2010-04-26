@@ -30,7 +30,7 @@ public class JsPackageTest extends JavaScriptFileTestSupport {
 		assertEquals(2, pkg.getPaths().size());
 	}
 
-	public void testGetJs() {
+	public void testGetJs() throws Exception {
 		JsFile js = pkg.getJs("a");
 		assertNotNull(js);
 		assertEquals("a", js.getClazz());
