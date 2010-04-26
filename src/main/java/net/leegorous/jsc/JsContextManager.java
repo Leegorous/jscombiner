@@ -58,6 +58,12 @@ public class JsContextManager {
 
 	private long lastRefresh = 0;
 
+	public void addClasspath(String path) {
+		JsPackage pkg = new JsPackage();
+		pkg.add(path);
+		addPackage(pkg);
+	}
+
 	public void addPackage(JsPackage pkg) {
 		JsPackage p = (JsPackage) pkgs.get(pkg.getName());
 		if (p == null) {
@@ -174,6 +180,44 @@ public class JsContextManager {
 
 	public JsFile getClasspathConfig(String path) {
 		return (JsFile) classpathConfig.get(path);
+	}
+
+	public JsFile getClazz(String name) throws Exception {
+		Classname cn = new Classname(name);
+		JsFile result = (JsFile) files.get(name);
+		if (result != null && result.exist()) {
+			return result;
+		}
+
+		JsPackage pkg = getPackage(cn.pkg);
+		boolean refreshed = false;
+		if (pkg == null) {
+			log.debug("refresh action 1");
+			refreshed = refreshPackages();
+		}
+		if (refreshed) {
+			pkg = getPackage(cn.pkg);
+		}
+		if (pkg == null) {
+			throw new JavaScriptNotFoundException(name);
+		}
+
+		result = pkg.getJs(cn.clazz);
+		if (result != null && result.exist()) {
+			files.put(name, result);
+			return result;
+		}
+		log.debug("refresh action 2");
+		if (refreshed = refreshPackages()) {
+			pkg = getPackage(cn.pkg);
+		}
+		if (pkg != null && (result = pkg.getJs(cn.clazz)) != null
+				&& result.exist()) {
+			files.put(name, result);
+			return result;
+		} else {
+			throw new JavaScriptNotFoundException(name);
+		}
 	}
 
 	protected Map getFiles() {
@@ -334,11 +378,5 @@ public class JsContextManager {
 		pkgs = pkg.refresh(newPkgs);
 		lastRefresh = System.currentTimeMillis();
 		return true;
-	}
-
-	public void addClasspath(String path) {
-		JsPackage pkg = new JsPackage();
-		pkg.add(path);
-		addPackage(pkg);
 	}
 }

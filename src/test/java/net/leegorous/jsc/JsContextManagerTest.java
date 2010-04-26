@@ -41,6 +41,13 @@ public class JsContextManagerTest extends JavaScriptFileTestSupport {
 		assertEquals(mgr, ctx.getContextManager());
 	}
 
+	public void testGetClazz() throws Exception {
+		mgr.addClasspath(getFileName("/scripts/test"));
+		JsFile js = mgr.getClazz("pkg.b");
+		assertNotNull(js);
+		log.debug(js);
+	}
+
 	public void testGetJs() throws Exception {
 		JsFile js = mgr.getJs(getFileName("/scripts/test/pkg/b.js"));
 		assertNotNull(js);
