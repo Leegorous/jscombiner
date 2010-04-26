@@ -15,13 +15,17 @@
  */
 package net.leegorous.jsc;
 
-public class JavaScriptNotFoundException extends Exception {
+public class JavaScriptNotFoundException extends RuntimeException {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -156821721958856722L;
 
 	public JavaScriptNotFoundException() {
-		super("JavaScript not found.");
+		this(null);
+	}
+
+	public JavaScriptNotFoundException(String name) {
+		super((name == null ? "JavaScript" : name) + " not found.");
 	}
 }
