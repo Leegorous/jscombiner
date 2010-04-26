@@ -56,6 +56,8 @@ public class JsContextManager {
 
 	private Map pkgs = Collections.synchronizedMap(new HashMap());
 
+	private long lastRefresh = 0;
+
 	public void addPackage(JsPackage pkg) {
 		JsPackage p = (JsPackage) pkgs.get(pkg.getName());
 		if (p == null) {
@@ -314,7 +316,15 @@ public class JsContextManager {
 		}
 	}
 
-	public synchronized void refreshPackages() {
+	/**
+	 * Refresh packages. It skips when it has refreshed less than 1 second.
+	 * 
+	 * @return true if packages refreshed, false if it skipped
+	 */
+	public synchronized boolean refreshPackages() {
+		if (System.currentTimeMillis() - lastRefresh < 1000) {
+			return false;
+		}
 		JsPackage pkg = (JsPackage) pkgs.get("");
 		Map newPkgs = pkgs;
 		if (pkgs.size() > 1) {
@@ -322,5 +332,7 @@ public class JsContextManager {
 			newPkgs.put(pkg.getName(), pkg);
 		}
 		pkgs = pkg.refresh(newPkgs);
+		lastRefresh = System.currentTimeMillis();
+		return true;
 	}
 }
