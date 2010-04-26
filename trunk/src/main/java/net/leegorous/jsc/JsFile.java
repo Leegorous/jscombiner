@@ -114,7 +114,14 @@ public class JsFile {
 		return name;
 	}
 
+	/**
+	 * Get the absolute path of the js file.
+	 * 
+	 * @return the path of the js file, null if file is null
+	 */
 	public String getPath() {
+		if (file == null)
+			return null;
 		return file.getAbsolutePath();
 	}
 
@@ -202,7 +209,7 @@ public class JsFile {
 		if (module != null)
 			buf.append("module: " + module + "\n");
 
-		buf.append("path:" + path + "\n");
+		buf.append("path:" + getPath() + "\n");
 
 		if (imported != null && imported.size() > 0)
 			buf.append("imported:" + imported + "\n");
