@@ -6,6 +6,7 @@ package net.leegorous.jsc;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author leegorous
@@ -46,6 +47,13 @@ public class JsContextManagerTest extends JavaScriptFileTestSupport {
 		JsFile js = mgr.getClazz("pkg.b");
 		assertNotNull(js);
 		log.debug(js);
+	}
+
+	public void testGetClazzes() throws Exception {
+		mgr.addClasspath(getFileName("/scripts/test"));
+		Set clazzes = mgr.getClazzes("pkg.*");
+		assertEquals(5, clazzes.size());
+		log.debug(clazzes);
 	}
 
 	public void testGetJs() throws Exception {
