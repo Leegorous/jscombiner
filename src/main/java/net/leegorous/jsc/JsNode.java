@@ -120,12 +120,7 @@ public class JsNode {
 	 * @throws Exception
 	 */
 	public void process() throws Exception {
-		// process dependencies
 		processImport(file);
-
-		// process the common dependencies defined in classpath configuration
-		// JsFile cfg = manager.getClasspathConfig(file.getClasspath());
-		// processImport(cfg);
 	}
 
 	private void processImport(JsFile file) throws Exception {

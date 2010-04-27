@@ -28,12 +28,10 @@ public class JsContextTest extends JavaScriptFileTestSupport {
 
 	public void testBuildHierarchy() throws Exception {
 		mgr.addClasspath(getFileName("/scripts/test"));
-		// String name = getFileName("pkg.b");
 		ctx.buildHierarchy("pkg.b");
 		JsNode hierarchy = ctx.getHierarchy();
 		assertNotNull(hierarchy.getFile());
 
-		// name = getFileName("/scripts/test/pkg/d.js");
 		ctx.buildHierarchy("pkg.d");
 		hierarchy = ctx.getHierarchy();
 		assertNull(hierarchy.getFile());

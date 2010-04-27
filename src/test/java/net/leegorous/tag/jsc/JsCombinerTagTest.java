@@ -7,11 +7,16 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @author leegorous
  * 
  */
 public class JsCombinerTagTest extends TestCase {
+
+	protected Log log = LogFactory.getLog(this.getClass());
 
 	private JsCombinerTag tag;
 
@@ -26,8 +31,9 @@ public class JsCombinerTagTest extends TestCase {
 	}
 
 	public void testNormalizePath() {
-		List list = tag.normalizePath("\r\n\tab.c; \tee \n dd\r\n  oo\r\n  ");
-		System.out.println(list);
+		List list = tag
+				.normalizePath("\r\n\tab.c; \tee \n dd\r\n  ..\\oo\r\n  ");
+		log.debug(list);
 		assertEquals(4, list.size());
 
 		list = tag.normalizePath("\r\n");
