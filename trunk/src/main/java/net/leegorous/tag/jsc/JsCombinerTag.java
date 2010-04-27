@@ -8,8 +8,10 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
@@ -19,8 +21,10 @@ import javax.servlet.jsp.tagext.BodyTagSupport;
 import net.leegorous.jsc.JsContext;
 import net.leegorous.jsc.JsContextManager;
 import net.leegorous.jsc.JsFile;
+import net.leegorous.jsc.JsNode;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,6 +51,10 @@ public class JsCombinerTag extends BodyTagSupport {
 	public static final String MODE_PROD = "prod";
 
 	protected static JsContextManager jsContextManager;
+
+	private static Map cpMap = new HashMap();
+
+	private String cp;
 
 	private String path;
 
@@ -89,6 +97,7 @@ public class JsCombinerTag extends BodyTagSupport {
 			mode = null;
 			output = null;
 			path = null;
+			cp = null;
 		}
 		return super.doEndTag();
 	}
@@ -106,6 +115,15 @@ public class JsCombinerTag extends BodyTagSupport {
 		} else {
 			return super.doStartTag();
 		}
+	}
+
+	/**
+	 * Get the classpath
+	 * 
+	 * @return cp
+	 */
+	public String getCp() {
+		return cp;
 	}
 
 	private JsContextManager getJsContextManager() {
@@ -225,6 +243,23 @@ public class JsCombinerTag extends BodyTagSupport {
 		return result;
 	}
 
+	private void addClasspath(JsContextManager mgr, String rootPath) {
+		if (cp == null)
+			return;
+		List classpath = (List) cpMap.get(cp);
+		if (classpath != null)
+			return;
+		List cps = normalizePath(cp);
+		List result = new ArrayList();
+		for (Iterator it = cps.iterator(); it.hasNext();) {
+			String str = (String) it.next();
+			String path = FilenameUtils.concat(rootPath, str);
+			mgr.addClasspath(path);
+			result.add(path);
+		}
+		cpMap.put(cp, result);
+	}
+
 	private void process() {
 		if (MODE_PROD.equals(mode) && output == null) {
 			throw new IllegalArgumentException(
@@ -235,19 +270,22 @@ public class JsCombinerTag extends BodyTagSupport {
 		if (path == null)
 			return;
 		JsContextManager mgr = getJsContextManager();
-		JsContext ctx = mgr.createContext();
 		String root = getRealPath("/");
 		log.debug(root);
+		addClasspath(mgr, root);
+
+		JsContext ctx = mgr.createContext();
 		String ctxPath = ((HttpServletRequest) pageContext.getRequest())
 				.getContextPath();
 
 		List li = normalizePath(path);
 		for (Iterator it = li.iterator(); it.hasNext();) {
 			String item = (String) it.next();
-			String p = getRealPath(item);
+			// String p = getRealPath(item);
 
 			try {
-				ctx.load(p);
+				ctx.buildHierarchy(item);
+				// ctx.load(p);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -255,7 +293,9 @@ public class JsCombinerTag extends BodyTagSupport {
 
 		List list = null;
 		try {
-			list = ctx.getList();
+			JsNode node = ctx.getHierarchy();
+			list = node.serialize();
+			// list = ctx.getList();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -306,6 +346,16 @@ public class JsCombinerTag extends BodyTagSupport {
 			buf.append(subTag);
 			result = buf;
 		}
+	}
+
+	/**
+	 * Set the classpath
+	 * 
+	 * @param cp
+	 *            classpath in format like this "scripts; clazz"
+	 */
+	public void setCp(String cp) {
+		this.cp = cp;
 	}
 
 	public void setMode(String mode) {

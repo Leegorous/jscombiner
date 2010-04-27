@@ -64,9 +64,12 @@ public class JsContextManager {
 	}
 
 	public void addClasspath(File file) {
-		JsPackage pkg = new JsPackage();
+		JsPackage pkg = (JsPackage) pkgs.get("");
+		if (pkg == null) {
+			pkg = new JsPackage();
+			addPackage(pkg);
+		}
 		pkg.add(file);
-		addPackage(pkg);
 	}
 
 	public void addPackage(JsPackage pkg) {
