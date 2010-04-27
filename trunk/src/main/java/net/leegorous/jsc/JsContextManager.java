@@ -60,8 +60,12 @@ public class JsContextManager {
 	private long lastRefresh = 0;
 
 	public void addClasspath(String path) {
+		addClasspath(new File(path));
+	}
+
+	public void addClasspath(File file) {
 		JsPackage pkg = new JsPackage();
-		pkg.add(path);
+		pkg.add(file);
 		addPackage(pkg);
 	}
 
