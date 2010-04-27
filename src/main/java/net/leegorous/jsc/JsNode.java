@@ -13,13 +13,70 @@ import java.util.Set;
  * 
  */
 public class JsNode {
+	public final static String ROOT = "ROOT";
 	private JsFile file;
 	private JsNode parent;
 	private List childs;
 	private JsNode root;
 	private List refs;
 
+	public List devideByModule() {
+		List list = devideByModule(new ArrayList());
+		List result = new ArrayList();
+		JsModule root = (JsModule) list.get(list.size() - 1);
+		for (int i = list.size() - 2; i >= 0; i--) {
+			JsModule module = (JsModule) list.get(i);
+			if (!root.contains(module)) {
+				result.add(module);
+			}
+		}
+		result.add(root);
+		return result;
+	}
+
+	private List devideByModule(List list) {
+		if (childs != null) {
+			for (Iterator it = childs.iterator(); it.hasNext();) {
+				JsNode node = (JsNode) it.next();
+				node.devideByModule(list);
+			}
+		}
+		if (this == root || isModule()) {
+			JsModule module = new JsModule();
+			module.setName(file == null ? ROOT : file.getModule());
+			module.setList(serialize());
+			list.add(module);
+		}
+		return list;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#hashCode()
+	 */
+	public int hashCode() {
+		String path = (file == null ? "" : file.getPath());
+		return path.hashCode();
+	}
+
 	private JsContextManager manager;
+
+	public String moduleName() {
+		if (isModule()) {
+			if (file == null)
+				return ROOT;
+			else
+				return file.getModule();
+		}
+		return null;
+	}
+
+	public boolean isModule() {
+		if (file == null && root == this)
+			return true;
+		return file.getModule() != null;
+	}
 
 	public JsNode() {
 		this(null, null);

@@ -40,8 +40,20 @@ public class JsContextTest extends JavaScriptFileTestSupport {
 		List list = hierarchy.serialize();
 		log.debug(list);
 
-		// without classpath config, no more 5 but only 4 js imported
-		assertEquals(4, list.size());
+		// without classpath config
+		assertEquals(5, list.size());
+	}
+
+	public void testDivideByModule() throws Exception {
+		mgr.addClasspath(getFileName("/scripts/test"));
+		ctx.buildHierarchy("pkg.b");
+		ctx.buildHierarchy("pkg.d");
+
+		JsNode hierarchy = ctx.getHierarchy();
+		List modules = hierarchy.devideByModule();
+		JsModule root = (JsModule) modules.get(0);
+		root.collapse();
+		System.out.println(root);
 	}
 
 	public void testBuildHierarchyLoopImported() throws Exception {
