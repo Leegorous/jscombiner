@@ -13,6 +13,12 @@
 		<tag-class>net.leegorous.tag.jsc.JsCombinerTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
+            <description>the classpaths, separate with ';'</description>
+            <name>cp</name>
+            <required>yes</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+		<attribute>
 			<description>the script paths, separate with ';'</description>
 			<name>path</name>
 			<required>no</required>

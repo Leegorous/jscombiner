@@ -28,7 +28,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.web.context.WebApplicationContext;
 
 /**
@@ -304,7 +303,7 @@ public class JsCombinerTag extends BodyTagSupport {
 			StringBuffer buf = new StringBuffer();
 			if (list != null) {
 				for (Iterator it = list.iterator(); it.hasNext();) {
-					JsFile js = (JsFile) it.next();
+					JsFile js = ((JsNode) it.next()).getFile();
 					String jspath = js.getPath();
 					String scriptPath = translateScriptPath(root, jspath);
 
