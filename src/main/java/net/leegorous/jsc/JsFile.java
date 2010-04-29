@@ -131,6 +131,8 @@ public class JsFile {
 	 * @throws Exception
 	 */
 	public void refresh() throws Exception {
+		if (synced())
+			return;
 		String content = JavaScriptDocument.readFile(file);
 
 		this.setModule(PATTERN_MODULE.getValue(content));
@@ -194,6 +196,18 @@ public class JsFile {
 
 	public void setPath(String path) {
 		this.setFile(new File(path));
+	}
+
+	/**
+	 * Check the jsFile update status
+	 * 
+	 * @return false if the file on disk has been updated
+	 */
+	public boolean synced() {
+		if (file.lastModified() > lastModified || file.length() != length) {
+			return false;
+		}
+		return true;
 	}
 
 	public String toString() {
