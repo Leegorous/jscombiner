@@ -194,6 +194,7 @@ public class JsContextManager {
 		Classname cn = new Classname(name);
 		JsFile result = (JsFile) files.get(name);
 		if (result != null && result.exist()) {
+			result.refresh();
 			return result;
 		}
 
