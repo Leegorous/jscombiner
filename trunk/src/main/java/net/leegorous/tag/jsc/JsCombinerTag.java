@@ -252,6 +252,12 @@ public class JsCombinerTag extends BodyTagSupport {
 		List result = new ArrayList();
 		for (Iterator it = cps.iterator(); it.hasNext();) {
 			String str = (String) it.next();
+			File f = new File(getRealPath("/" + str));
+			if (f.exists()) {
+				mgr.addClasspath(f);
+				result.add(f.getAbsoluteFile());
+				continue;
+			}
 			String path = FilenameUtils.concat(rootPath, str);
 			mgr.addClasspath(path);
 			result.add(path);
