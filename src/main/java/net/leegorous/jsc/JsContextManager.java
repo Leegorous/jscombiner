@@ -64,6 +64,11 @@ public class JsContextManager {
 	}
 
 	public void addClasspath(File file) {
+		if (file == null || !file.exists()) {
+			throw new IllegalArgumentException("js package on [" + file
+					+ "] not exist");
+		}
+		log.debug("Add JsPackage: " + file.getAbsolutePath());
 		JsPackage pkg = (JsPackage) pkgs.get("");
 		if (pkg == null) {
 			pkg = new JsPackage();
