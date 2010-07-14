@@ -42,7 +42,7 @@ public class JavaScriptDocument {
 			+ PATTERN_SUFFIX;
 
 	protected static Pattern IMPORT_PATTERN = Pattern
-			.compile("@import\\s*(\\*|\\w+(\\.\\w+)*(\\.\\*)?)"
+			.compile("@import\\s*(\\*|[\\w_\\-]+(\\.[\\w_\\-]+)*(\\.\\*)?)"
 					+ PATTERN_SUFFIX);
 
 	protected static Pattern CLASS_PATTERN = Pattern.compile("@class"
