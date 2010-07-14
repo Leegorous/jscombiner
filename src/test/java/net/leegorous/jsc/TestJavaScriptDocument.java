@@ -78,7 +78,7 @@ public class TestJavaScriptDocument extends JavaScriptFileTestSupport {
 
 		assertEquals("a", config.get(0).toString());
 		assertEquals("pkg.c", config.get(1).toString());
-		assertEquals(2, config.size());
+		assertTrue(config.size() >= 2);
 	}
 
 	public void testReadFile() throws Exception {
