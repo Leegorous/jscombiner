@@ -36,5 +36,11 @@
 			<required>no</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<attribute>
+			<description>if set, it will output an array contains script path</description>
+			<name>outputType</name>
+			<required>no</required>
+			<rtexprvalue>false</rtexprvalue>
+		</attribute>
 	</tag>
 </taglib>

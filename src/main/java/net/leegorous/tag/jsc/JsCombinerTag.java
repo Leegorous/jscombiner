@@ -59,6 +59,12 @@ public class JsCombinerTag extends BodyTagSupport {
 
 	private String mode = MODE_DEV;
 
+	private String outputType;
+
+	public void setOutputType(String outputType) {
+		this.outputType = outputType;
+	}
+
 	private String output;
 
 	private StringBuffer result;
@@ -97,6 +103,7 @@ public class JsCombinerTag extends BodyTagSupport {
 			output = null;
 			path = null;
 			cp = null;
+			outputType = null;
 		}
 		return super.doEndTag();
 	}
@@ -313,10 +320,21 @@ public class JsCombinerTag extends BodyTagSupport {
 					String jspath = js.getPath();
 					String scriptPath = translateScriptPath(root, jspath);
 
-					buf.append(preTag);
-					buf.append(ctxPath);
-					buf.append(scriptPath);
-					buf.append(subTag);
+					if ("array".equals(outputType)) {
+						buf.append("\"" + scriptPath + "\",");
+					} else {
+						buf.append(preTag);
+						buf.append(ctxPath);
+						buf.append(scriptPath);
+						buf.append(subTag);
+					}
+				}
+				if ("array".equals(outputType) && buf.length() > 0) {
+					StringBuffer buf2 = new StringBuffer();
+					buf2.append("[");
+					buf2.append(buf.substring(0, buf.length() - 1));
+					buf2.append("]");
+					buf = buf2;
 				}
 			}
 			result = buf;
