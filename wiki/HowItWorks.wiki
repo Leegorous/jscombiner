@@ -1,5 +1,5 @@
 #summary Describe how jscombiner works.
-#labels Phase-Design
+#labels Phase-Design,Featured
 
 = 简介 =
 
