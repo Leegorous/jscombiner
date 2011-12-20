@@ -18,219 +18,235 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JsFile {
 
-	private static Log log = LogFactory.getLog(JsFile.class);
+    private static Log log = LogFactory.getLog(JsFile.class);
 
-	private static ConfigPattern PATTERN_MODULE = new ConfigPattern("module",
-			"\\w+(\\.\\w+)*");
-	/**
-	 * The class name of javascript
-	 */
-	private String clazz;
+    private static ConfigPattern PATTERN_MODULE = new ConfigPattern("module", "\\w+(\\.\\w+)*");
 
-	/**
-	 * The file path of javascript
-	 */
-	private String path;
+    /**
+     * The class name of javascript
+     */
+    private String clazz;
 
-	/**
-	 * The classpath of javascript
-	 */
-	private String classpath;
+    /**
+     * The file path of javascript
+     */
+    private String path;
 
-	private File file;
+    /**
+     * The classpath of javascript
+     */
+    private String classpath;
 
-	private String module;
+    private File file;
 
-	/**
-	 * The name of javascript
-	 */
-	private String name;
+    private String module;
 
-	private long lastModified;
+    /**
+     * The name of javascript
+     */
+    private String name;
 
-	private long length;
+    private long lastModified;
 
-	private List imported;
+    private long length;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	public boolean equals(Object obj) {
-		if (obj == null || file == null)
-			return false;
-		if (!(obj instanceof JsFile))
-			return false;
-		JsFile f = (JsFile) obj;
-		return file.equals(f.getFile());
-	}
+    private List imported;
 
-	public boolean exist() {
-		return file.exists();
-	}
+    private transient String webRoot;
 
-	/**
-	 * @return the classpath
-	 */
-	public String getClasspath() {
-		return classpath;
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    public boolean equals(Object obj) {
+        if (obj == null || file == null) return false;
+        if (!(obj instanceof JsFile)) return false;
+        JsFile f = (JsFile) obj;
+        return file.equals(f.getFile());
+    }
 
-	/**
-	 * @return the clazz
-	 */
-	public String getClazz() {
-		return clazz;
-	}
+    public boolean exist() {
+        return file.exists();
+    }
 
-	public File getFile() {
-		return file;
-	}
+    /**
+     * @return the classpath
+     */
+    public String getClasspath() {
+        return classpath;
+    }
 
-	/**
-	 * @return the imported
-	 */
-	public List getImported() {
-		return imported;
-	}
+    /**
+     * @return the clazz
+     */
+    public String getClazz() {
+        return clazz;
+    }
 
-	public long getLastModified() {
-		return lastModified;
-	}
+    public File getFile() {
+        return file;
+    }
 
-	/**
-	 * @return the length
-	 */
-	public long getLength() {
-		return length;
-	}
+    /**
+     * @return the imported
+     */
+    public List getImported() {
+        return imported;
+    }
 
-	public String getModule() {
-		return module;
-	}
+    public long getLastModified() {
+        return lastModified;
+    }
 
-	public String getName() {
-		return name;
-	}
+    /**
+     * @return the length
+     */
+    public long getLength() {
+        return length;
+    }
 
-	/**
-	 * Get the absolute path of the js file.
-	 * 
-	 * @return the path of the js file, null if file is null
-	 */
-	public String getPath() {
-		if (file == null)
-			return null;
-		return file.getAbsolutePath();
-	}
+    public String getModule() {
+        return module;
+    }
 
-	/**
-	 * Refresh the js setting: module, lastModified, length and imported classes
-	 * 
-	 * @throws Exception
-	 */
-	public void refresh() throws Exception {
-		if (synced())
-			return;
-		String content = JavaScriptDocument.readFile(file);
+    public String getName() {
+        return name;
+    }
 
-		this.setModule(PATTERN_MODULE.getValue(content));
+    /**
+     * Get the absolute path of the js file.
+     * 
+     * @return the path of the js file, null if file is null
+     */
+    public String getPath() {
+        if (file == null) return null;
+        return file.getAbsolutePath();
+    }
 
-		this.setLastModified(file.lastModified());
-		this.setLength(file.length());
-		this.setImported(JavaScriptDocument.getImportInfo(content));
+    public String getWebPath() {
+        return getWebPath(getPath());
+    }
 
-		if (log.isDebugEnabled()) {
-			log.debug("JsFile created: " + this);
-		}
-	}
+    public String getWebPath(String jspath) {
+        String scriptPath = jspath.substring(webRoot.length());
 
-	/**
-	 * @param classpath
-	 *            the classpath to set
-	 */
-	public void setClasspath(String classpath) {
-		this.classpath = classpath;
-	}
+        if (scriptPath.indexOf('\\') != -1) {
+            scriptPath = scriptPath.replaceAll("\\\\", "/");
+        }
+        return scriptPath;
+    }
 
-	/**
-	 * @param clazz
-	 *            the clazz to set
-	 */
-	public void setClazz(String clazz) {
-		this.clazz = clazz;
-	}
+    public String getWebRoot() {
+        return webRoot;
+    }
 
-	public void setFile(File file) {
-		this.file = file;
-	}
+    /**
+     * Refresh the js setting: module, lastModified, length and imported classes
+     * 
+     * @throws Exception
+     */
+    public void refresh() throws Exception {
+        if (synced()) return;
+        String content = JavaScriptDocument.readFile(file);
 
-	/**
-	 * @param imported
-	 *            the imported to set
-	 */
-	public void setImported(List imported) {
-		this.imported = imported;
-	}
+        this.setModule(PATTERN_MODULE.getValue(content));
 
-	public void setLastModified(long lastModified) {
-		this.lastModified = lastModified;
-	}
+        this.setLastModified(file.lastModified());
+        this.setLength(file.length());
+        this.setImported(JavaScriptDocument.getImportInfo(content));
 
-	/**
-	 * @param length
-	 *            the length to set
-	 */
-	public void setLength(long length) {
-		this.length = length;
-	}
+        if (log.isDebugEnabled()) {
+            log.debug("JsFile created: " + this);
+        }
+    }
 
-	public void setModule(String module) {
-		this.module = module;
-	}
+    /**
+     * @param classpath
+     *            the classpath to set
+     */
+    public void setClasspath(String classpath) {
+        this.classpath = classpath;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    /**
+     * @param clazz
+     *            the clazz to set
+     */
+    public void setClazz(String clazz) {
+        this.clazz = clazz;
+    }
 
-	public void setPath(String path) {
-		this.setFile(new File(path));
-	}
+    public void setFile(File file) {
+        this.file = file;
+    }
 
-	/**
-	 * Check the jsFile update status
-	 * 
-	 * @return false if the file on disk has been updated
-	 */
-	public boolean synced() {
-		if (file.lastModified() > lastModified || file.length() != length) {
-			return false;
-		}
-		return true;
-	}
+    /**
+     * @param imported
+     *            the imported to set
+     */
+    public void setImported(List imported) {
+        this.imported = imported;
+    }
 
-	public String toString() {
-		Date date = new Date();
-		date.setTime(lastModified);
-		StringBuffer buf = new StringBuffer();
-		buf.append("{\n");
-		buf.append("name:" + name + "\n");
+    public void setLastModified(long lastModified) {
+        this.lastModified = lastModified;
+    }
 
-		if (clazz != null)
-			buf.append("class: " + clazz + "\n");
+    /**
+     * @param length
+     *            the length to set
+     */
+    public void setLength(long length) {
+        this.length = length;
+    }
 
-		if (module != null)
-			buf.append("module: " + module + "\n");
+    public void setModule(String module) {
+        this.module = module;
+    }
 
-		buf.append("path:" + getPath() + "\n");
+    public void setName(String name) {
+        this.name = name;
+    }
 
-		if (imported != null && imported.size() > 0)
-			buf.append("imported:" + imported + "\n");
+    public void setPath(String path) {
+        this.setFile(new File(path));
+    }
 
-		buf.append("modified:" + date + "\n");
-		buf.append("length:" + length + "\n");
-		buf.append('}');
-		return buf.toString();
-	}
+    public void setWebRoot(String webRoot) {
+        this.webRoot = webRoot;
+    }
+
+    /**
+     * Check the jsFile update status
+     * 
+     * @return false if the file on disk has been updated
+     */
+    public boolean synced() {
+        if (file.lastModified() > lastModified || file.length() != length) {
+            return false;
+        }
+        return true;
+    }
+
+    public String toString() {
+        Date date = new Date();
+        date.setTime(lastModified);
+        StringBuffer buf = new StringBuffer();
+        buf.append("{\n");
+        buf.append("name:" + name + "\n");
+
+        if (clazz != null) buf.append("class: " + clazz + "\n");
+
+        if (module != null) buf.append("module: " + module + "\n");
+
+        buf.append("path:" + getPath() + "\n");
+
+        if (imported != null && imported.size() > 0) buf.append("imported:" + imported + "\n");
+
+        buf.append("modified:" + date + "\n");
+        buf.append("length:" + length + "\n");
+        buf.append('}');
+        return buf.toString();
+    }
 }

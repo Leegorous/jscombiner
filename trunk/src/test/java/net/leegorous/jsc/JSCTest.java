@@ -27,9 +27,10 @@ public class JSCTest {
                 }
             }
         });
-        String root = new File(clazz.getResource("/").toURI()).getAbsolutePath();
-        String result = jsc.process("dev", root, "scripts/test", "pkg.b", null, "array");
+        String result = jsc.process("dev", "scripts/test", "pkg.b", null, "array");
         assertEquals(3, StringUtils.countMatches(result, ","));
-    }
 
+        result = jsc.process("dev", "scripts/test", "pkg.b", null, null);
+        assertEquals(4, StringUtils.countMatches(result, "\n"));
+    }
 }
