@@ -1,6 +1,7 @@
 package net.leegorous.jsc;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -27,10 +28,13 @@ public class JSCTest {
                 }
             }
         });
-        String result = jsc.process("scripts/test", "pkg.b", "array", null, null);
+        String result = jsc.process("scripts/test", "pkg.b", "array", null);
         assertEquals(3, StringUtils.countMatches(result, ","));
 
-        result = jsc.process("scripts/test", "pkg.b", null, null, null);
-        assertEquals(4, StringUtils.countMatches(result, "\n"));
+        result = jsc.process("scripts/test", "pkg.b", null, null);
+        assertEquals(3, StringUtils.countMatches(result, "\n"));
+
+        result = jsc.process("scripts/test", "pkg.b", "file", "all.js");
+        assertTrue(result.indexOf("all.") != -1);
     }
 }

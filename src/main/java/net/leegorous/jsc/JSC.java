@@ -16,10 +16,8 @@
 package net.leegorous.jsc;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -28,10 +26,10 @@ import java.util.Map;
 import javax.servlet.ServletContext;
 
 import net.leegorous.util.ArrayFormBuilder;
+import net.leegorous.util.FileFormBuilder;
 import net.leegorous.util.OutputBuilder;
-import net.leegorous.util.ScriptListBuilder;
+import net.leegorous.util.TagsFormBuilder;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -63,12 +61,6 @@ public class JSC {
     }
 
     protected static Log log = LogFactory.getLog(JSC.class);
-
-    public static final String DEFAULT_ENCODING = "UTF-8";
-
-    public static final String MODE_DEV = "dev";
-
-    public static final String MODE_PROD = "prod";
 
     public static final String OUTPUT_ARRAY = "array";
 
@@ -109,10 +101,6 @@ public class JSC {
         System.out.println("Done.");
     }
 
-    private String preTag = "<script src=\"";
-
-    private String subTag = "\" language=\"JavaScript\" type=\"text/javascript\"></script>\n";
-
     private PathResolver pathResolver;
 
     private void addClasspath(JsContextManager mgr, String rootPath, String cp) {
@@ -136,66 +124,6 @@ public class JSC {
         cpMap.put(cp, result);
     }
 
-    private File getOutput(String path, long lastModified) {
-        int idx = path.lastIndexOf('/');
-        String folderPath;
-        String fileName;
-        if (idx < 0) {
-            folderPath = "/";
-            fileName = path;
-        } else {
-            String f = path.substring(0, idx + 1);
-            if (f.charAt(0) != '/') f = "/" + f;
-            folderPath = f;
-            fileName = path.substring(idx + 1);
-        }
-        File folder = new File(getRealPath(folderPath));
-        if (!folder.exists()) {
-            folder.mkdirs();
-        }
-
-        if (fileName.endsWith(".js")) {
-            fileName = fileName.substring(0, fileName.length() - 3);
-        }
-
-        final String qName = fileName;
-        final long[] last = new long[] { 0 };
-        final String[] fName = new String[1];
-        File[] files = folder.listFiles(new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                if (name.startsWith(qName + ".") && name.endsWith(".js")) {
-                    String tail = name.substring(qName.length() + 1, name.length() - 3);
-                    if (StringUtils.isNumeric(tail)) {
-                        long a = Long.parseLong(tail);
-                        if (a > last[0]) {
-                            last[0] = a;
-                            fName[0] = name;
-                        }
-                        return true;
-                    }
-                }
-                return false;
-            }
-        });
-
-        if (files != null) {
-            for (int i = 0; i < files.length; i++) {
-                File f = files[i];
-                if (!f.getName().equals(fName[0])) {
-                    f.delete();
-                } else if (last[0] < lastModified) {
-                    f.delete();
-                }
-            }
-        }
-
-        if (last[0] > lastModified) fileName = fName[0];
-        else
-            fileName = fileName + "." + (new Date().getTime()) + ".js";
-
-        return new File(folder, fileName);
-    }
-
     private String getRealPath(String path) {
         return pathResolver.getPath(path);
     }
@@ -214,7 +142,7 @@ public class JSC {
         return result;
     }
 
-    public String process(String cp, String path, String outputType, String output, String mode) {
+    public String process(String cp, String path, String outputType, String output) {
         if (OUTPUT_FILE.equals(outputType) && output == null) {
             throw new IllegalArgumentException(
                     "property 'output' could not be null when output to 'file'");
@@ -253,45 +181,15 @@ public class JSC {
             ((JsNode) it.next()).getFile().setWebRoot(root);
         }
 
-        StringBuffer result = null;
-        if (mode == null || MODE_DEV.equals(mode)) {
-            OutputBuilder builder = null;
-            if (OUTPUT_ARRAY.equals(outputType)) {
-                builder = new ArrayFormBuilder();
-            } else if (OUTPUT_FILE.equals(outputType)) {
-            } else {
-                builder = new ScriptListBuilder();
-            }
-            return builder.build(list);
+        OutputBuilder builder = null;
+        if (OUTPUT_ARRAY.equals(outputType)) {
+            builder = new ArrayFormBuilder();
+        } else if (OUTPUT_FILE.equals(outputType)) {
+            builder = new FileFormBuilder(output, pathResolver);
+        } else {
+            builder = new TagsFormBuilder();
         }
-
-        if (MODE_PROD.equals(mode)) {
-            long last = 0;
-            JsFile js = null;
-            for (Iterator it = list.iterator(); it.hasNext();) {
-                js = ((JsNode) it.next()).getFile();
-                if (js.getLastModified() > last) last = js.getLastModified();
-            }
-            File file = getOutput(output, last);
-            String scriptPath = js.getWebPath(file.getAbsolutePath());
-
-            if (!file.exists()) {
-                String content = "";
-                try {
-                    content = ctx.getScriptsContent();
-                    FileUtils.writeStringToFile(file, content, DEFAULT_ENCODING);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            StringBuffer buf = new StringBuffer();
-            buf.append(preTag);
-            buf.append(scriptPath);
-            buf.append(subTag);
-            result = buf;
-        }
-        return result.toString();
+        return builder.build(list);
     }
 
     public void setPathResolver(PathResolver pathResolver) {
