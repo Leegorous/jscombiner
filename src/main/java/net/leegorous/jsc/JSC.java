@@ -27,6 +27,10 @@ import java.util.Map;
 
 import javax.servlet.ServletContext;
 
+import net.leegorous.util.ArrayFormBuilder;
+import net.leegorous.util.OutputBuilder;
+import net.leegorous.util.ScriptListBuilder;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
@@ -66,7 +70,16 @@ public class JSC {
 
     public static final String MODE_PROD = "prod";
 
-    private static Map cpMap = new HashMap();
+    private Map cpMap = new HashMap();
+
+    private JsContextManager mgr;
+
+    private JsContextManager getJsContextMgr() {
+        if (mgr == null) {
+            mgr = new JsContextManager();
+        }
+        return mgr;
+    }
 
     /**
      * @param args
@@ -195,31 +208,26 @@ public class JSC {
         return result;
     }
 
-    public String process(String mode, String root, String cp, String path, String output,
-            String outputType) {
+    public String process(String mode, String cp, String path, String output, String outputType) {
         if (MODE_PROD.equals(mode) && output == null) {
             throw new IllegalArgumentException("property 'output' could not be null in 'prod' mode");
         }
 
         path = StringUtils.trimToNull(path);
         if (path == null) return null;
-        JsContextManager mgr = new JsContextManager();
-        // String root = getRealPath("/");
+
+        JsContextManager mgr = getJsContextMgr();
+        String root = getRealPath("/");
         log.debug(root);
         addClasspath(mgr, root, cp);
 
         JsContext ctx = mgr.createContext();
-        // String ctxPath = ((HttpServletRequest)
-        // pageContext.getRequest()).getContextPath();
 
         List li = normalizePath(path);
         for (Iterator it = li.iterator(); it.hasNext();) {
             String item = (String) it.next();
-            // String p = getRealPath(item);
-
             try {
                 ctx.buildHierarchy(item);
-                // ctx.load(p);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -229,48 +237,35 @@ public class JSC {
         try {
             JsNode node = ctx.getHierarchy();
             list = node.serialize();
-            // list = ctx.getList();
         } catch (Exception e) {
             e.printStackTrace();
+            return "";
+        }
+
+        for (Iterator it = list.iterator(); it.hasNext();) {
+            ((JsNode) it.next()).getFile().setWebRoot(root);
         }
 
         StringBuffer result = null;
         if (mode == null || MODE_DEV.equals(mode)) {
-            StringBuffer buf = new StringBuffer();
-            if (list != null) {
-                for (Iterator it = list.iterator(); it.hasNext();) {
-                    JsFile js = ((JsNode) it.next()).getFile();
-                    String jspath = js.getPath();
-                    String scriptPath = translateScriptPath(root, jspath);
-
-                    if ("array".equals(outputType)) {
-                        buf.append("\"" + scriptPath + "\",");
-                    } else {
-                        buf.append(preTag);
-                        // buf.append(ctxPath);
-                        buf.append(scriptPath);
-                        buf.append(subTag);
-                    }
-                }
-                if ("array".equals(outputType) && buf.length() > 0) {
-                    StringBuffer buf2 = new StringBuffer();
-                    buf2.append("[");
-                    buf2.append(buf.substring(0, buf.length() - 1));
-                    buf2.append("]");
-                    buf = buf2;
-                }
+            OutputBuilder builder = null;
+            if ("array".equals(outputType)) {
+                builder = new ArrayFormBuilder();
+            } else {
+                builder = new ScriptListBuilder();
             }
-            result = buf;
+            return builder.build(list);
         }
 
         if (MODE_PROD.equals(mode)) {
             long last = 0;
+            JsFile js = null;
             for (Iterator it = list.iterator(); it.hasNext();) {
-                JsFile js = (JsFile) it.next();
+                js = ((JsNode) it.next()).getFile();
                 if (js.getLastModified() > last) last = js.getLastModified();
             }
             File file = getOutput(output, last);
-            String scriptPath = translateScriptPath(root, file.getAbsolutePath());
+            String scriptPath = js.getWebPath(file.getAbsolutePath());
 
             if (!file.exists()) {
                 String content = "";
@@ -284,7 +279,6 @@ public class JSC {
 
             StringBuffer buf = new StringBuffer();
             buf.append(preTag);
-            // buf.append(ctxPath);
             buf.append(scriptPath);
             buf.append(subTag);
             result = buf;
@@ -294,15 +288,6 @@ public class JSC {
 
     public void setPathResolver(PathResolver pathResolver) {
         this.pathResolver = pathResolver;
-    }
-
-    private String translateScriptPath(String root, String jspath) {
-        String scriptPath = jspath.substring(root.length());
-
-        if (scriptPath.indexOf('\\') != -1) {
-            scriptPath = scriptPath.replaceAll("\\\\", "/");
-        }
-        return scriptPath;
     }
 
 }
