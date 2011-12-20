@@ -27,10 +27,10 @@ public class JSCTest {
                 }
             }
         });
-        String result = jsc.process("dev", "scripts/test", "pkg.b", null, "array");
+        String result = jsc.process("scripts/test", "pkg.b", "array", null, null);
         assertEquals(3, StringUtils.countMatches(result, ","));
 
-        result = jsc.process("dev", "scripts/test", "pkg.b", null, null);
+        result = jsc.process("scripts/test", "pkg.b", null, null, null);
         assertEquals(4, StringUtils.countMatches(result, "\n"));
     }
 }
