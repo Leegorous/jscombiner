@@ -70,6 +70,12 @@ public class JSC {
 
     public static final String MODE_PROD = "prod";
 
+    public static final String OUTPUT_ARRAY = "array";
+
+    public static final String OUTPUT_TAGS = "tags";
+
+    public static final String OUTPUT_FILE = "file";
+
     private Map cpMap = new HashMap();
 
     private JsContextManager mgr;
@@ -208,9 +214,10 @@ public class JSC {
         return result;
     }
 
-    public String process(String mode, String cp, String path, String output, String outputType) {
-        if (MODE_PROD.equals(mode) && output == null) {
-            throw new IllegalArgumentException("property 'output' could not be null in 'prod' mode");
+    public String process(String cp, String path, String outputType, String output, String mode) {
+        if (OUTPUT_FILE.equals(outputType) && output == null) {
+            throw new IllegalArgumentException(
+                    "property 'output' could not be null when output to 'file'");
         }
 
         path = StringUtils.trimToNull(path);
@@ -249,8 +256,9 @@ public class JSC {
         StringBuffer result = null;
         if (mode == null || MODE_DEV.equals(mode)) {
             OutputBuilder builder = null;
-            if ("array".equals(outputType)) {
+            if (OUTPUT_ARRAY.equals(outputType)) {
                 builder = new ArrayFormBuilder();
+            } else if (OUTPUT_FILE.equals(outputType)) {
             } else {
                 builder = new ScriptListBuilder();
             }
